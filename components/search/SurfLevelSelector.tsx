@@ -1,6 +1,6 @@
 "use client";
 
-import { SURF_LEVELS, type SurfLevel } from "@/lib/types";
+import { SURF_LEVELS, LEVEL_LABELS, type SurfLevel } from "@/lib/surf/levels";
 import { Icon } from "@/components/ui/Icon";
 
 const descriptions = [
@@ -32,7 +32,7 @@ export function SurfLevelSelector({
             onChange={() => onChange(level)}
           />
           <span>
-            <strong>{level}</strong>
+            <strong>{LEVEL_LABELS[level]}</strong>
             <small>{descriptions[index]}</small>
           </span>
           {value === level && <Icon name="check" size={18} />}

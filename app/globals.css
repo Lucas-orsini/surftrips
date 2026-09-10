@@ -3131,3 +3131,209 @@ h2 {
     scroll-behavior: auto;
   }
 }
+
+/* Functional journey: extend the existing editorial design tokens. */
+.destination-photo-empty {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(150deg, #d8ebed, #92bec6);
+  color: #315d69;
+}
+.season-badge {
+  max-width: calc(100% - 32px);
+  white-space: normal;
+  line-height: 1.45;
+}
+.destination-facts {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+.destination-title-row h3 {
+  overflow-wrap: anywhere;
+}
+.airport-whitelist-note,
+.search-season-note,
+.season-detail-note,
+.booking-disclosure {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.airport-whitelist-note {
+  padding: 8px 14px;
+}
+.search-season-note {
+  max-width: 750px;
+  margin-bottom: 24px;
+}
+.region-options {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.booking-section {
+  margin: 70px 0;
+  padding: 36px;
+  background: var(--sand, #f7f6f0);
+  border-radius: 16px;
+  scroll-margin-top: 100px;
+}
+.booking-section h2 {
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(26px, 4vw, 40px);
+  letter-spacing: -1px;
+}
+.booking-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 25px 0;
+  align-items: end;
+}
+.booking-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+.booking-form input,
+.booking-form select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 48px;
+  border: 1px solid #b9cbce;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+.booking-form .button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.booking-frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: white;
+}
+.booking-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 20px 0;
+}
+.booking-fallback {
+  margin: 18px 0;
+  line-height: 1.7;
+}
+.booking-fallback p {
+  margin-bottom: 18px;
+}
+.booking-disclosure {
+  margin-top: 20px;
+}
+.detail-grid > * {
+  min-width: 0;
+}
+.detail-heading h1 {
+  overflow-wrap: anywhere;
+}
+.spot-detail {
+  padding: 26px 0;
+  border-bottom: 1px solid var(--line, #e1e8e9);
+}
+.spot-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+}
+.spot-heading h4 {
+  font-family: var(--font-syne), sans-serif;
+  font-size: 22px;
+  flex: 1;
+}
+.spot-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin: 20px 0;
+}
+.spot-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.spot-facts dd {
+  margin: 5px 0 0;
+  font-size: 14px;
+}
+.spot-detail .body-copy {
+  white-space: pre-line;
+}
+.season-detail-note {
+  margin: 15px 0 25px;
+}
+.related-zones {
+  margin-bottom: 80px;
+}
+.related-zones h2 {
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
+  margin: 16px 0 28px;
+}
+.related-zones > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px 36px;
+}
+.skeleton .destination-photo,
+.skeleton-line {
+  background: #e9eff0;
+  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+}
+.skeleton-line {
+  height: 22px;
+  margin: 18px 0;
+  border-radius: 5px;
+  width: 80%;
+}
+@keyframes skeleton-pulse {
+  to {
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton .destination-photo,
+  .skeleton-line {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  .booking-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .booking-section {
+    padding: 24px 16px;
+  }
+  .spot-heading {
+    gap: 10px;
+  }
+}
+@media (max-width: 420px) {
+  .booking-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .season-badge {
+    font-size: 10px;
+  }
+}
+
+.spot-heading .level-tag,
+.booking-section > .eyebrow {
+  color: var(--deep);
+}

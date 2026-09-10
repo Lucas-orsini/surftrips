@@ -1,46 +1,49 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Destination, SearchMatch } from "@/lib/types";
+import type { Destination, SearchCriteria } from "@/lib/types";
+import { destinationHref } from "@/lib/validation/search";
+import { SEASON_CLASS, SEASON_LABELS } from "@/lib/surf/season";
 import { Icon } from "@/components/ui/Icon";
 import { SeasonTimeline } from "./SeasonTimeline";
-
 export function DestinationCard({
-  destination,
+  destination: d,
   index = 0,
-  season,
-  reasons,
+  criteria,
 }: {
   destination: Destination;
   index?: number;
-  season?: SearchMatch["season"];
-  reasons?: string[];
+  criteria?: SearchCriteria;
 }) {
-  const status =
-    season ?? (destination.bestMonths.includes(9) ? "good" : "variable");
+  const href = destinationHref(d.zoneId, criteria);
   return (
     <article className="destination-card">
       <Link
         className="destination-photo-link"
-        href={`/destination/${destination.slug}`}
+        href={href}
+        aria-label={`Découvrir ${d.name}`}
       >
-        <div className="destination-photo">
-          <Image
-            src={destination.image}
-            alt={destination.imageAlt}
-            fill
-            sizes="(max-width: 640px) 85vw, (max-width: 900px) 45vw, 31vw"
-          />
-          <span className={`season-badge season-${status}`}>
-            <span />
-            {status === "good"
-              ? "Bonne période"
-              : status === "variable"
-                ? "Conditions variables"
-                : "Hors saison"}
-          </span>
-          <span className="destination-photo-coordinates">
-            {destination.coordinates}
-          </span>
+        <div
+          className={`destination-photo ${!d.image ? "destination-photo-empty" : ""}`}
+        >
+          {d.image ? (
+            <Image
+              src={d.image}
+              alt={d.imageAlt || d.name}
+              fill
+              sizes="(max-width: 640px) 90vw, (max-width: 900px) 45vw, 31vw"
+            />
+          ) : (
+            <Icon name="wave" size={74} />
+          )}
+          {d.seasonStatus && (
+            <span
+              className={`season-badge season-${SEASON_CLASS[d.seasonStatus]}`}
+            >
+              <span />
+              {SEASON_LABELS[d.seasonStatus]}
+            </span>
+          )}
+          <span className="destination-photo-coordinates">{d.coordinates}</span>
           <span className="destination-photo-arrow">
             <Icon name="diagonal" size={23} />
           </span>
@@ -48,45 +51,49 @@ export function DestinationCard({
       </Link>
       <div className="destination-title-row">
         <div>
-          <p className="country-label">
-            {destination.country}
-            <span> / {destination.region}</span>
-          </p>
+          <p className="country-label">{d.country}</p>
           <h3>
-            <Link href={`/destination/${destination.slug}`}>
-              {destination.name}
-            </Link>
+            <Link href={href}>{d.name}</Link>
           </h3>
         </div>
-        <span className="editorial-number">0{index + 1}</span>
+        <span className="editorial-number">
+          {String(index + 1).padStart(2, "0")}
+        </span>
       </div>
-      <p className="destination-tagline">{destination.tagline}</p>
+      <p className="destination-tagline">
+        {d.airportName || "Un nouvel horizon à explorer"}
+        {d.airportCode ? ` · ${d.airportCode}` : ""}
+      </p>
       <div className="destination-facts">
         <span>
           <Icon name="wave" size={16} />
-          {destination.recommendedLevel}
+          {d.levelLabel}
         </span>
-        <span>
-          <Icon name="plane" size={15} />
-          {destination.transferMinutes} min
-        </span>
+        {d.transfer && (
+          <span>
+            <Icon name="plane" size={15} />
+            {d.transfer}
+          </span>
+        )}
         <span>
           <Icon name="pin" size={15} />
-          {destination.spotCount} spots
+          {d.compatibleSpots} spot{d.compatibleSpots > 1 ? "s" : ""}
+          {criteria ? " compatibles" : " documentés"}
         </span>
       </div>
-      <SeasonTimeline
-        bestMonths={destination.bestMonths}
-        shoulderMonths={destination.shoulderMonths}
-      />
-      {reasons && (
+      <SeasonTimeline timeline={d.timeline} />
+      {criteria && (
         <ul className="match-reasons">
-          {reasons.map((reason) => (
-            <li key={reason}>
-              <Icon name="check" size={16} />
-              {reason}
-            </li>
-          ))}
+          <li>
+            <Icon name="check" size={16} />
+            Spots accessibles à ton niveau
+          </li>
+          <li>
+            <Icon name="calendar" size={16} />
+            {d.seasonStatus
+              ? SEASON_LABELS[d.seasonStatus]
+              : "Saison à vérifier"}
+          </li>
         </ul>
       )}
     </article>

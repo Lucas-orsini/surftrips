@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AIRPORTS } from "@/lib/data";
+import { AIRPORTS } from "@/lib/airports";
 import { Icon } from "@/components/ui/Icon";
 
 export function AirportSelector({
@@ -35,6 +35,9 @@ export function AirportSelector({
           autoComplete="off"
         />
       </div>
+      <p className="airport-whitelist-note">
+        Aéroports de départ proposés · liste non exhaustive
+      </p>
       <div className="airport-options" aria-label="Aéroports disponibles">
         {airports.length ? (
           airports.map((airport) => (

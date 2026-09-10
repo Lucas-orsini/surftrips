@@ -16,8 +16,8 @@ export default function LegalPage() {
       <h1>Mentions légales</h1>
       {(!publisher || !host) && (
         <p className="demo-notice">
-          Version de démonstration. Les informations de l’éditeur et de
-          l’hébergeur seront complétées avant l’ouverture publique du service.
+          Les informations de l’éditeur et de l’hébergeur seront complétées
+          avant l’ouverture publique du service.
         </p>
       )}
       <h2>Éditeur du site</h2>
@@ -51,9 +51,10 @@ export default function LegalPage() {
       <h2>Contenu de cette version</h2>
       <p>
         Surftrips aide à explorer les destinations de surf à partir d’un niveau,
-        de dates et d’un point de départ. Cette version utilise une collection
-        de démonstration. Elle ne fournit ni prévision de houle en temps réel ni
-        disponibilité de vols ou de séjours.
+        de dates et d’un point de départ. Les spots et saisons proviennent de
+        notre base documentaire. Les conditions de surf ne sont pas des
+        prévisions en temps réel. Les recherches et réservations de vols sont
+        proposées par des partenaires sur les pages destination.
       </p>
       <h2>Photographies et cartographie</h2>
       <p>

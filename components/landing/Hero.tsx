@@ -2,7 +2,7 @@ import Image from "next/image";
 import { SearchBar } from "@/components/search/SearchBar";
 import { Icon } from "@/components/ui/Icon";
 
-export function Hero() {
+export function Hero({ countries }: { countries: string[] }) {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="container hero-grid">
@@ -117,7 +117,7 @@ export function Hero() {
         </div>
       </div>
       <div className="container hero-search">
-        <SearchBar />
+        <SearchBar countries={countries} />
       </div>
     </section>
   );

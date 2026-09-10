@@ -1,5 +1,6 @@
-export const SURF_LEVELS = ["Débutant", "Intermédiaire", "Expert"] as const;
-export type SurfLevel = (typeof SURF_LEVELS)[number];
+import type { SurfLevel } from "./surf/levels.ts";
+import type { SeasonStatus, SeasonMonth } from "./surf/season.ts";
+export type { SurfLevel } from "./surf/levels.ts";
 export interface Airport {
   code: string;
   city: string;
@@ -7,42 +8,67 @@ export interface Airport {
   latitude: number;
   longitude: number;
 }
-export interface Destination {
-  slug: string;
+export interface SearchCriteria {
+  niveau: SurfLevel;
+  origine: string;
+  dateDepart: string;
+  dateRetour: string;
+  region?: string;
+}
+export interface SurfSpot {
+  spotId: string;
+  name: string;
+  zoneId: string;
+  minimumLevel: SurfLevel | null;
+  idealLevel: SurfLevel | null;
+  minimumNeedsReview: boolean;
+  idealNeedsReview: boolean;
+  startMonth: number | null;
+  endMonth: number | null;
+  season: string | null;
+  wave: string | null;
+  bottom: string | null;
+  notes: string | null;
+  caution: string | null;
+}
+export interface Zone {
+  zoneId: string;
   name: string;
   country: string;
-  countryCode: string;
-  region: string;
-  coordinates: string;
-  latitude: number;
-  longitude: number;
-  image: string;
-  imageAlt: string;
-  tagline: string;
-  description: string;
-  levels: SurfLevel[];
-  recommendedLevel: string;
-  bestMonths: number[];
-  shoulderMonths: number[];
-  airport: Airport;
-  transferMinutes: number;
-  spotCount: number;
-  wave: string;
-  bottom: string;
-  caution: string;
-  spots: { name: string; level: SurfLevel; type: string }[];
+  airportCode: string | null;
+  airportAlternative: string | null;
+  airportName: string | null;
+  transfer: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  notes: string | null;
+  spots: SurfSpot[];
 }
-export interface SearchCriteria {
-  level: SurfLevel;
-  airport: string;
-  departure: string;
-  returnDate: string;
-  destination: string;
+export interface Destination extends Zone {
+  image?: string;
+  imageAlt?: string;
+  coordinates?: string;
+  timeline: SeasonMonth[];
+  seasonStatus: SeasonStatus | null;
+  levelLabel: string;
+  compatibleSpots: number;
 }
-export interface SearchMatch {
-  destination: Destination;
+export interface SearchDestination extends Destination {
   score: number;
-  reasons: string[];
-  season: "good" | "variable" | "off";
-  distanceKm: number;
+}
+export interface DataIssue {
+  entity: "spots" | "zones";
+  id: string;
+  field: string;
+  value: unknown;
+}
+export interface MapPoint {
+  zoneId: string;
+  name: string;
+  country: string;
+  airport: string | null;
+  iata: string | null;
+  transfer: string | null;
+  x: number;
+  y: number;
 }

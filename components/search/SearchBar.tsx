@@ -2,9 +2,11 @@
 
 import { useState, useTransition, useCallback, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { AIRPORTS } from "@/lib/data";
+import { AIRPORTS } from "@/lib/airports";
 import type { SearchCriteria } from "@/lib/types";
-import { isValidDate } from "@/lib/search";
+import { isValidDate } from "@/lib/validation/dates";
+import { validateSearch, searchQuery, WORLD } from "@/lib/validation/search";
+import { LEVEL_LABELS } from "@/lib/surf/levels";
 import { SearchField } from "./SearchField";
 import { SurfLevelSelector } from "./SurfLevelSelector";
 import { AirportSelector } from "./AirportSelector";
@@ -14,17 +16,19 @@ import { Icon } from "@/components/ui/Icon";
 
 type Field = "level" | "airport" | "dates" | "destination";
 const defaults: SearchCriteria = {
-  level: "Intermédiaire",
-  airport: "PAR",
-  departure: "",
-  returnDate: "",
-  destination: "Monde entier",
+  niveau: "intermediaire",
+  origine: "PAR",
+  dateDepart: "",
+  dateRetour: "",
+  region: "Monde entier",
 };
 
 export function SearchBar({
   initialValues,
+  countries = [],
 }: {
   initialValues?: Partial<SearchCriteria>;
+  countries?: string[];
 }) {
   const [values, setValues] = useState<SearchCriteria>({
     ...defaults,
@@ -47,7 +51,7 @@ export function SearchBar({
     onClose: close,
   });
   const airport =
-    AIRPORTS.find((item) => item.code === values.airport) || AIRPORTS[0];
+    AIRPORTS.find((item) => item.code === values.origine) || AIRPORTS[0];
   const formatDate = (date: string) =>
     new Intl.DateTimeFormat("fr-FR", {
       day: "numeric",
@@ -57,20 +61,23 @@ export function SearchBar({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
-      !isValidDate(values.departure) ||
-      !isValidDate(values.returnDate) ||
-      values.returnDate <= values.departure
+      !isValidDate(values.dateDepart) ||
+      !isValidDate(values.dateRetour) ||
+      values.dateRetour <= values.dateDepart
     ) {
       setError("Choisis une date de départ et une date de retour postérieure.");
       setOpen("dates");
       return;
     }
+    const validation = validateSearch({ ...values }, countries);
+    if (!validation.success) {
+      setError(validation.error);
+      return;
+    }
     setError("");
     setOpen(null);
     startTransition(() =>
-      router.push(
-        `/recherche?${new URLSearchParams({ ...values }).toString()}`,
-      ),
+      router.push(`/recherche?${searchQuery(validation.data)}`),
     );
   }
   return (
@@ -83,14 +90,14 @@ export function SearchBar({
       >
         <SearchField
           label="Niveau"
-          value={values.level}
+          value={LEVEL_LABELS[values.niveau]}
           icon="wave"
           {...fieldProps("level")}
         >
           <SurfLevelSelector
-            value={values.level}
+            value={values.niveau}
             onChange={(level) => {
-              setValues({ ...values, level });
+              setValues({ ...values, niveau: level });
               close();
             }}
           />
@@ -102,9 +109,9 @@ export function SearchBar({
           {...fieldProps("airport")}
         >
           <AirportSelector
-            value={values.airport}
+            value={values.origine}
             onChange={(code) => {
-              setValues({ ...values, airport: code });
+              setValues({ ...values, origine: code });
               close();
             }}
           />
@@ -112,8 +119,8 @@ export function SearchBar({
         <SearchField
           label="Dates"
           value={
-            isValidDate(values.departure) && isValidDate(values.returnDate)
-              ? `${formatDate(values.departure)} – ${formatDate(values.returnDate)}`
+            isValidDate(values.dateDepart) && isValidDate(values.dateRetour)
+              ? `${formatDate(values.dateDepart)} – ${formatDate(values.dateRetour)}`
               : "Choisir mes dates"
           }
           icon="calendar"
@@ -121,10 +128,14 @@ export function SearchBar({
           {...fieldProps("dates")}
         >
           <DateSelector
-            departure={values.departure}
-            returnDate={values.returnDate}
+            departure={values.dateDepart}
+            returnDate={values.dateRetour}
             onChange={(departure, returnDate) => {
-              setValues({ ...values, departure, returnDate });
+              setValues({
+                ...values,
+                dateDepart: departure,
+                dateRetour: returnDate,
+              });
               setError("");
             }}
             onDone={close}
@@ -132,14 +143,15 @@ export function SearchBar({
         </SearchField>
         <SearchField
           label="Destination"
-          value={values.destination}
+          value={values.region || WORLD}
           icon="globe"
           {...fieldProps("destination")}
         >
           <RegionSelector
-            value={values.destination}
+            countries={countries}
+            value={values.region || WORLD}
             onChange={(destination) => {
-              setValues({ ...values, destination });
+              setValues({ ...values, region: destination });
               close();
             }}
           />

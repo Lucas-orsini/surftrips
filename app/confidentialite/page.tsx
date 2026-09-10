@@ -24,10 +24,13 @@ export default function PrivacyPage() {
       </p>
       <h2>Cookies et suivi</h2>
       <p>
-        Cette version n’intègre aucun outil publicitaire, service d’analyse
-        d’audience ou cookie de suivi. Les images et les polices sont servies
-        par le site. Le formulaire ne conserve pas de recherche dans le stockage
-        local de ton navigateur.
+        Le module de réservation Travelpayouts se charge uniquement sur une
+        fiche destination après saisie de tes critères de voyage. Il transmet
+        les aéroports et les dates au partenaire, qui peut utiliser ses propres
+        technologies de suivi. La réservation s’effectue sur son site. Les
+        images et les polices de Surftrips sont servies localement ; le
+        formulaire ne conserve pas de recherche dans le stockage local du
+        navigateur.
       </p>
       <h2>Infrastructure</h2>
       <p>

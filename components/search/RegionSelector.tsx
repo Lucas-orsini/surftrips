@@ -2,30 +2,22 @@
 
 import { Icon } from "@/components/ui/Icon";
 
-export const REGIONS = [
-  "Monde entier",
-  "Europe",
-  "Afrique",
-  "Asie",
-  "Portugal",
-  "Maroc",
-  "Indonésie",
-];
-
 export function RegionSelector({
   value,
+  countries,
   onChange,
 }: {
   value: string;
+  countries: string[];
   onChange: (value: string) => void;
 }) {
   return (
     <div className="region-options">
-      {REGIONS.map((region, index) => (
+      {["Monde entier", ...countries].map((region, index) => (
         <button
           key={region}
           type="button"
-          className={`region-option ${value === region ? "selected" : ""} ${index === 4 ? "region-divider" : ""}`}
+          className={`region-option ${value === region ? "selected" : ""} ${index === 1 ? "region-divider" : ""}`}
           aria-pressed={value === region}
           onClick={() => onChange(region)}
         >

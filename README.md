@@ -1,82 +1,94 @@
 # surftrips.fr
 
-Landing éditoriale et parcours de recherche en français. Next.js 16, React 19, TypeScript, App Router, Tailwind CSS 4 et Framer Motion.
+Application de recherche de surf en français : Next.js 16 / React 19, TypeScript, App Router, Tailwind CSS 4 et Framer Motion. Le design de la landing est conservé.
 
 ## Démarrage
 
-Node.js 22.18 ou supérieur recommandé (Node.js 24 utilisé pour la validation).
+Node.js 22.18+ recommandé.
 
 ```sh
 npm ci
+# Copier .env.example vers .env.local et renseigner les variables.
 npm run dev
 ```
 
-Ouvrir http://localhost:3000.
+`.env` et `.env.local` sont ignorés par Git. Les quatre variables métier nécessaires sont `DATABASE_URL`, `DIRECT_URL`, `TRAVELPAYOUTS_MARKER`, `TRAVELPAYOUTS_SHMARKER`. La connexion utilise `DATABASE_URL`, ou `DIRECT_URL` si elle est absente. Le widget nécessite les deux marqueurs. Aucun token d’API de prix n’est utilisé. Les deux URLs PostgreSQL et les éventuels credentials Supabase restent exclusivement côté serveur ; les marqueurs d’affiliation sont les identifiants publics nécessaires au script partenaire.
 
-```sh
-npm run build
-npm run start
-```
+Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration, création de table, écriture ou secours avec données fictives. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
 
-Le premier build nécessite un accès à Google Fonts. `next/font` télécharge Syne et DM Sans puis les sert localement : aucune requête du navigateur vers Google Fonts. Les photographies sont également locales et optimisées par `next/image`.
+`NEXT_PUBLIC_SITE_URL` est facultative et vaut par défaut `https://surftrips.fr`. Les variables `LEGAL_*` existantes restent à renseigner avant publication. Le premier build télécharge les polices Syne et DM Sans pour les servir localement.
 
-## Ce qui fonctionne
+## Parcours
 
-- Landing complète, navigation mobile, ancres et navbar sticky.
-- Trois niveaux exclusifs : Débutant, Intermédiaire et Expert.
-- Sélecteur d’aéroport filtrable par ville, nom ou IATA ; recherche insensible aux accents.
-- Dates de départ/retour, validation, sélection de pays ou de région.
-- Recherche serveur avec critères partageables dans l’URL, classement déterministe et explications.
-- États d’erreur, attente, boutons désactivés, recherche sans résultat.
-- Pages `/destinations`, `/destination/ericeira`, `/destination/taghazout`, `/destination/canggu`.
-- Carte SVG avec itinéraire animé, survol, boutons tactiles et navigation clavier.
-- Saisonnalité sur douze mois avec libellés accessibles et alternative aux couleurs.
-- Métadonnées, canonicals, Open Graph, favicon, sitemap, robots et page 404.
-- Prise en compte de `prefers-reduced-motion` et lien d’évitement.
+- `/` : formulaire existant, sélection de zones réelles et carte basée sur les coordonnées de la base.
+- `/recherche` : résultats ; `/search` propose aussi ce parcours. Paramètres : `niveau`, `origine`, `dateDepart`, `dateRetour`, `region` facultative.
+- `/destination/[zoneId]` : contenu serveur, metadata et canonical sans paramètres. Avec un voyage valide, seuls les spots accessibles sont proposés et le module vol apparaît. Sans paramètres, toute la fiche reste indexable et un mini formulaire permet de préparer le vol sur place.
+- `/destinations` : catalogue réel ; sitemap dynamique contenant uniquement les zones existantes.
 
-## Architecture et connexion des données
+Exemple : `/recherche?niveau=intermediaire&origine=PAR&dateDepart=2026-10-10&dateRetour=2026-10-20`. Les dates sont validées par rapport au jour courant en Europe/Paris et doivent rester dans les douze prochains mois, retour compris.
 
-```text
-app/                         Pages, métadonnées et styles
-components/landing/          Sections de la landing
-components/search/           Formulaire et sélecteurs interactifs
-components/destination/      Carte destination et calendrier de saison
-components/ui/               Identité, icônes et animation partagée
-lib/types.ts                 Contrats de données
-lib/data.ts                  Collection illustrative et aéroports
-lib/destinations.ts          Interface DestinationRepository
-lib/search.ts                Calculs purs : dates, saisons, distance, classement
-tests/                       Tests de logique et parcours navigateur
-public/images/               Photographies et carte servies localement
-```
+## Architecture
 
-Les pages et les sections éditoriales sont des Server Components. Les frontières client sont limitées au formulaire, à la navigation interactive, à la carte et à l’animation `Reveal`. `LazyMotion` limite les fonctionnalités d’animation chargées.
+| Fichiers                                                     | Responsabilité                                                                                                        |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `lib/db/index.ts`, `zones.ts`, `search.ts`                   | Pool PostgreSQL TLS, transactions READ ONLY, requêtes paramétrées, cache catalogue de 60 secondes, diagnostic serveur |
+| `lib/db/rows.ts`                                             | Adaptation explicite des colonnes inspectées, isolement des valeurs inconnues                                         |
+| `lib/surf/levels.ts`, `season.ts`, `score.ts`, `matching.ts` | Métier pur, aucun import PostgreSQL ni React                                                                          |
+| `lib/validation/`                                            | Validation partagée et obligatoirement appliquée sur le serveur                                                       |
+| `lib/airports.ts`                                            | Liste blanche indépendante des départs, volontairement non exhaustive                                                 |
+| `lib/travel/` et `components/travel/`                        | Paramètres Specific Route, iframe, mini formulaire et secours                                                         |
+| `proxy.ts`, `lib/security/rate-limit.ts`                     | Protection des deux routes de recherche                                                                               |
 
-Pour connecter la base existante, remplacer les méthodes `list()` et `findBySlug()` de `destinationRepository` par l’adaptateur de la base/API, en conservant le contrat `Destination`. Les composants n’accèdent pas directement à la base. Conserver les clés et secrets dans cet adaptateur serveur, jamais dans les propriétés des composants client.
+Les composants reçoivent des saisons, niveaux compatibles et timelines préparés côté serveur. Les pays sont chargés depuis `zones.pays`. Il n’existe pas de colonne continent ni photo : aucune n’a été inventée. Deux photographies locales existantes sont liées à leurs zones documentées ; les autres cartes utilisent un motif graphique neutre.
 
-La collection contient **trois destinations de démonstration**. Les périodes, niveaux par spot, durées et nombres de spots sont illustratifs, pas des prévisions ni des données validées. Cette distinction apparaît sur la landing, les résultats et les fiches. Les valeurs 06 et 03 de la section de confiance désignent six critères et trois niveaux, sans prétendre à une taille de base fictive.
+## Règles du moteur
 
-La recherche compare tous les mois traversés par le séjour. La saison détermine le classement ; la distance à vol d’oiseau depuis l’aéroport de départ départage les scores. Les pays et régions filtrent la collection, et le niveau détermine les exemples de spots adaptés. Aucun vol, prix ou horaire n’est simulé. Pour exploiter la vraie base, remplacer le classement illustratif par les règles métier de Surftrips et calculer les fenêtres saisonnières par spot et niveau.
+Trois niveaux centralisés : `debutant`, `intermediaire`, `expert`. Un spot dont le minimum est inconnu reste exclu du matching. Un idéal inconnu est signalé et ne reçoit pas de bonus ; son minimum valide reste appliqué sans conversion. Le [rapport de base](docs/database.md) liste les 41 lignes historiques à corriger.
 
-Les badges de la landing illustrent explicitement **septembre** ; ceux des résultats se basent sur les dates choisies. Les fiches sont préconstruites avec `generateStaticParams` et `dynamicParams = false`. Lors de l’ajout de destinations, reconstruire le site ou adapter ce réglage et la politique de cache à la base de données.
+La saison ne supprime jamais une destination accessible. Le statut retient le meilleur statut parmi les spots accessibles et les mois traversés par le voyage. Une période manquante reste inconnue, jamais présentée comme une saison certaine. La timeline utilise exactement les intervalles `mois_debut` / `mois_fin`, avec passage circulaire de décembre à janvier.
 
-## Vérification
+Score sur 100, déterministe : niveau 45 %, saison 30 %, nombre de spots 15 %, transfert 10 %. Après le filtre strict de sécurité, l’idéal correspondant vaut 1, l’accessibilité seule 0,8. Saison optimale 1, épaule 0,6, hors saison 0,2, inconnue 0. Nombre de spots saturé à cinq. Transfert : décroissance linéaire jusqu’à six heures ; les durées composites ou ambiguës ne reçoivent aucun bonus et leur texte original reste affiché. Égalités départagées par identifiant de zone.
+
+En Monde entier : deux zones maximum par valeur de pays existante, puis douze au total. Avec un pays : toutes les zones admissibles de ce pays. Les exclusions de niveau et de région sont conservées dans le résultat serveur, jamais exposées dans l’URL ou un endpoint public.
+
+## Travelpayouts
+
+Le script `https://tpemd.com/content` est chargé exclusivement dans la fiche destination avec un voyage validé. `campaign_id=111`, `promo_id=4484`, EUR, français. Les paramètres exacts sont `from_name`, `to_name`, `departure`, `return`, dates ISO conservées. Le script réel a été inspecté : il valide bien `AAAA-MM-JJ` et crée lui-même `widget-holder`.
+
+Une seule iframe `srcDoc`, remontée par clé composée des quatre paramètres de vol. Un observateur de DOM et les messages vérifiés depuis cette iframe pilotent l’état de chargement et la hauteur. Le script ne monte qu’après hydratation pour éviter un double chargement. Le partenaire confirme son contenu par un message `loaded`, dont la source et l’origine sont vérifiées. Après cinq secondes sans contenu exploitable lorsque la section approche de l’écran, le secours ouvre une recherche KAYAK avec les mêmes aéroports et dates. Le lien reste aussi disponible lorsque le widget se charge. Aucun prix n’est calculé ou stocké sur les résultats.
+
+L’iframe isole le DOM du partenaire de React. `allow-same-origin` est nécessaire au stockage utilisé par le script réel : cette isolation est fonctionnelle et ne constitue pas une frontière de sécurité entre origines. Les états React restent des frères de l’iframe. Les marqueurs d’affiliation sont publics ; les secrets PostgreSQL et les tokens de services ne lui sont jamais transmis.
+
+## Limitation des recherches et déploiement
+
+Fenêtre glissante : 30 requêtes de recherche maximum en 60 secondes, réponse HTTP 429 avec `Retry-After`. Les deux routes partagent le compteur. Mémoire bornée et aucune IP brute conservée.
+
+**Contrat d’hébergement :** le proxy d’entrée doit écraser `x-real-ip` avec l’IP du visiteur (ex. Nginx `proxy_set_header X-Real-IP $remote_addr;`) et empêcher l’accès direct au serveur Node. Sur Vercel, le code utilise `x-vercel-forwarded-for`, réservé à la plateforme. Les headers `x-forwarded-for` envoyés par un visiteur ne permettent pas de contourner la protection. Sans IP de confiance, les requêtes partagent un quota conservateur.
+
+Le compteur intégré est **par processus Node**, adapté à une instance. Pour plusieurs instances ou un déploiement serverless, configurer également une limite globale 30/min/IP au niveau de l’ingress/WAF ou fournir un stockage partagé existant. Aucun service externe ni nouvelle table n’a été créé pour cela. Un redémarrage réinitialise le compteur local.
+
+## Vérifications
 
 ```sh
 npm run typecheck
 npm run lint
-npm run test
+npm test
+npm run build
+npm run start
 npm run test:e2e
+npm run db:inspect
 ```
 
-Les tests navigateur utilisent Google Chrome installé localement, deux profils desktop/mobile et axe pour les règles WCAG A/AA. Pour un environnement CI sans Chrome, installer le navigateur avec `npx playwright install chrome` avant les tests. Les captures sont écrites dans `test-results/` (ignoré).
+Playwright utilise Chrome local, deux profils desktop/mobile, et les données Supabase réelles. Seul le script tiers est simulé pour tester de façon reproductible le succès, le blocage et le remontage. Deux contrôles supplémentaires utilisent le vrai widget partenaire et vérifient les attributs de préremplissage injectés. Les tests couvrent aussi les URLs, l’accessibilité axe et les largeurs 320, 390, 768, 1024 et 1440 px. `PLAYWRIGHT_BASE_URL` permet de cibler un serveur de production déjà lancé. Les tests unitaires utilisent des fixtures isolées dans `tests/`, jamais importées dans l’application.
 
-Validation locale : build de production, TypeScript, ESLint, six tests métier et huit parcours navigateur. Les contrôles de largeur couvrent 320, 390, 768, 1024 et 1440 pixels.
+Les tables et politiques existantes sont documentées dans [docs/database.md](docs/database.md). Les crédits des visuels restent dans [ASSETS.md](ASSETS.md).
 
-Audit Lighthouse mobile sur le serveur de production local : **92 performance, 100 accessibilité, 100 bonnes pratiques, 100 SEO**. FCP 0,9 s, LCP 3,4 s, TBT 10 ms, CLS 0. Ce sont des mesures de laboratoire : le LCP reste à surveiller après déploiement sur l’hébergement final, avec son cache d’images et ses conditions réseau. Aucun résultat de Core Web Vitals terrain n’est supposé.
+## Validation réalisée le 10 septembre 2026
 
-## Configuration de publication
-
-Les variables sont documentées dans `.env.example`. Renseigner l’identité réelle de l’éditeur, l’hébergeur et le contact avant publication ; aucun renseignement juridique n’a été inventé. Les pages de confidentialité décrivent le comportement actuel sans analytics, compte ou stockage local.
-
-Définir `NEXT_PUBLIC_SITE_URL` pour les URLs canoniques et le sitemap. Renseigner les variables au build, les pages publiques étant préconstruites. Les références des médias sont dans [ASSETS.md](./ASSETS.md).
+- TypeScript, ESLint et build Next.js de production réussis.
+- 19 tests unitaires et 16 tests navigateur desktop/mobile réussis, dont deux avec le widget réel.
+- Parcours réel Intermédiaire / Paris / 10–20 octobre 2026 / Monde entier : douze zones Supabase, au plus deux par pays, uniquement des spots accessibles ; paramètres conservés jusqu’au widget.
+- Fiche directe, changement d’origine, instance unique, blocage publicitaire, script silencieux et iframe vide vérifiés ; contrôles axe réussis sur la landing et une fiche avec secours.
+- HTTP 429 constaté au-delà de trente requêtes sur les deux routes de recherche.
+- Aucun credential local retrouvé dans les sources versionnables ou les bundles JavaScript client ; aucun driver PostgreSQL dans ces bundles. `.env` et `.env.local` sont ignorés par Git.
+- 77 zones et 94 spots lus dans la base ; aucun schéma, enregistrement ou politique RLS modifié. Les quatre variables métier sont présentes dans la configuration locale. Les valeurs devront aussi être configurées chez l’hébergeur.

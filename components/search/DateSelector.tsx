@@ -1,4 +1,5 @@
 "use client";
+import { dateBounds } from "@/lib/validation/dates";
 
 export function DateSelector({
   departure,
@@ -11,8 +12,7 @@ export function DateSelector({
   onChange: (departure: string, returnDate: string) => void;
   onDone: () => void;
 }) {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const { today, maximum } = dateBounds();
   return (
     <div className="date-selector">
       <p>Quelques jours ou quelques semaines. À toi de voir.</p>
@@ -20,6 +20,7 @@ export function DateSelector({
         Départ
         <input
           type="date"
+          max={maximum}
           aria-label="Date de départ"
           value={departure}
           min={today}
@@ -35,6 +36,7 @@ export function DateSelector({
         Retour
         <input
           type="date"
+          max={maximum}
           aria-label="Date de retour"
           value={returnDate}
           min={departure || today}

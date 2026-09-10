@@ -1,5 +1,6 @@
 "use client";
 
+import type { MapPoint } from "@/lib/types";
 import { useState } from "react";
 import Link from "next/link";
 import { LazyMotion, m, useReducedMotion } from "framer-motion";
@@ -7,45 +8,10 @@ import Image from "next/image";
 import { loadMotionFeatures } from "@/lib/load-motion";
 import { Icon } from "@/components/ui/Icon";
 
-const points = [
-  {
-    slug: "ericeira",
-    name: "Ericeira",
-    country: "Portugal",
-    airport: "Lisbonne",
-    iata: "LIS",
-    x: 47.38,
-    y: 29.31,
-    time: 45,
-    good: true,
-  },
-  {
-    slug: "taghazout",
-    name: "Taghazout",
-    country: "Maroc",
-    airport: "Agadir",
-    iata: "AGA",
-    x: 47.3,
-    y: 35.32,
-    time: 50,
-    good: false,
-  },
-  {
-    slug: "canggu",
-    name: "Canggu",
-    country: "Indonésie",
-    airport: "Denpasar",
-    iata: "DPS",
-    x: 81.98,
-    y: 63.32,
-    time: 60,
-    good: true,
-  },
-];
-
-export function WorldMapPreview() {
+export function WorldMapPreview({ points }: { points: MapPoint[] }) {
   const [selected, setSelected] = useState(points[0]);
   const reduced = useReducedMotion();
+  if (!selected) return null;
   const endX = selected.x * 10;
   const endY = selected.y * 3.75;
   return (
@@ -83,12 +49,12 @@ export function WorldMapPreview() {
             <Icon name="wave" size={20} />
             <span>
               <strong>{selected.name}</strong>
-              <small>ENV. {selected.time} MIN DE TRANSFERT</small>
+              <small>{selected.transfer || "TRANSFERT À PRÉCISER"}</small>
             </span>
           </div>
         </div>
         <span className="map-caption">
-          Un itinéraire illustratif, déjà un peu d’évasion.
+          Les coordonnées et aéroports de nos destinations.
         </span>
       </div>
       <div className="map-visual">
@@ -118,7 +84,7 @@ export function WorldMapPreview() {
               aria-hidden="true"
             >
               <m.path
-                key={selected.slug}
+                key={selected.zoneId}
                 d={`M506.5 83.42 Q${endX < 600 ? 390 : 740} ${endX < 600 ? 10 : -75} ${endX} ${endY}`}
                 stroke="var(--ocean)"
                 strokeWidth="1.5"
@@ -132,8 +98,8 @@ export function WorldMapPreview() {
           </LazyMotion>
           {points.map((point) => (
             <span
-              key={point.slug}
-              className={`map-marker ${selected.slug === point.slug ? "is-selected" : ""}`}
+              key={point.zoneId}
+              className={`map-marker ${selected.zoneId === point.zoneId ? "is-selected" : ""}`}
               style={{ left: `${point.x}%`, top: `${point.y}%` }}
               aria-hidden="true"
               onMouseEnter={() => setSelected(point)}
@@ -147,14 +113,9 @@ export function WorldMapPreview() {
             <span className="eyebrow">PROCHAINE ESCALE</span>
             <strong>{selected.name}</strong>
             <span>{selected.country}</span>
-            <span className="map-season">
-              <i />
-              {selected.good ? "Bonne période" : "Conditions variables"}
-              <small> · septembre</small>
-            </span>
           </div>
           <Link
-            href={`/destination/${selected.slug}`}
+            href={`/destination/${selected.zoneId}`}
             aria-label={`Voir ${selected.name}`}
             className="round-link"
           >
@@ -175,9 +136,9 @@ export function WorldMapPreview() {
         >
           {points.map((point) => (
             <button
-              key={point.slug}
+              key={point.zoneId}
               type="button"
-              aria-pressed={selected.slug === point.slug}
+              aria-pressed={selected.zoneId === point.zoneId}
               onClick={() => setSelected(point)}
             >
               {point.name}

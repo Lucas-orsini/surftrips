@@ -30,10 +30,16 @@ export function DestinationsSection({
             <Icon name="arrow" size={19} />
           </Link>
         </div>
+        {destinations.length === 0 && (
+          <p className="body-copy">
+            Les destinations sont momentanément indisponibles. Réessaie dans
+            quelques instants.
+          </p>
+        )}
         <div className="destinations-grid">
           {destinations.map((destination, index) => (
             <DestinationCard
-              key={destination.slug}
+              key={destination.zoneId}
               destination={destination}
               index={index}
             />
@@ -42,9 +48,9 @@ export function DestinationsSection({
         <div className="destination-footnote">
           <span>
             <span className="small-dot" />
-            EXEMPLE DE SAISON : SEPTEMBRE
+            LES SAISONS, SPOT PAR SPOT
           </span>
-          <p>Sélection illustrative. Chaque spot a ses particularités.</p>
+          <p>Choisis tes dates et ton niveau pour affiner ces horizons.</p>
         </div>
       </Reveal>
     </section>

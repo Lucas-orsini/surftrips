@@ -1,25 +1,9 @@
-const MONTHS = [
-  "Janvier",
-  "Février",
-  "Mars",
-  "Avril",
-  "Mai",
-  "Juin",
-  "Juillet",
-  "Août",
-  "Septembre",
-  "Octobre",
-  "Novembre",
-  "Décembre",
-];
-
+import { SEASON_LABELS, type SeasonMonth } from "@/lib/surf/season";
 export function SeasonTimeline({
-  bestMonths,
-  shoulderMonths = [],
+  timeline,
   detailed = false,
 }: {
-  bestMonths: number[];
-  shoulderMonths?: number[];
+  timeline: SeasonMonth[];
   detailed?: boolean;
 }) {
   return (
@@ -32,26 +16,22 @@ export function SeasonTimeline({
         </span>
       </div>
       <ol className="month-list" aria-label="Saisonnalité indicative du surf">
-        {MONTHS.map((month, index) => (
+        {timeline.map(({ month, label, status }) => (
           <li
             key={month}
             className={
-              bestMonths.includes(index + 1)
+              status === "optimale"
                 ? "month-good"
-                : shoulderMonths.includes(index + 1)
+                : status === "epaule"
                   ? "month-variable"
                   : ""
             }
-            title={`${month} : ${bestMonths.includes(index + 1) ? "période favorable" : shoulderMonths.includes(index + 1) ? "conditions variables" : "hors période favorable"}`}
+            title={`${label} : ${status ? SEASON_LABELS[status] : "Saison non renseignée"}`}
           >
-            <span aria-hidden="true">{month[0]}</span>
+            <span aria-hidden="true">{label[0]}</span>
             <span className="sr-only">
-              {month} :{" "}
-              {bestMonths.includes(index + 1)
-                ? "période favorable"
-                : shoulderMonths.includes(index + 1)
-                  ? "conditions variables"
-                  : "hors période favorable"}
+              {label} :{" "}
+              {status ? SEASON_LABELS[status] : "Saison non renseignée"}
             </span>
             <i />
           </li>
