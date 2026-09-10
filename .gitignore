@@ -1,0 +1,52 @@
+# Dépendances (conserver package-lock.json dans Git)
+node_modules/
+
+# Fichiers générés par Next.js et les builds
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# Variables d’environnement et secrets locaux
+# Le modèle sans secrets reste versionné.
+.env*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Configuration locale de déploiement
+.vercel/
+
+# Caches et fichiers incrémentaux
+*.tsbuildinfo
+.eslintcache
+.cache/
+.turbo/
+.npm/
+
+# Tests, couverture et rapports Playwright
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Journaux et diagnostics Node.js
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Fichiers système macOS et Windows
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Fichiers locaux d’éditeur et sauvegardes temporaires
+.idea/
+*.swp
+*.swo
+*~
