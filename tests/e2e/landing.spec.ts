@@ -179,7 +179,7 @@ test("Supabase réel : Intermédiaire Paris Monde entier → destination → fal
     { timeout: 12000 },
   );
   await expect(
-    page.getByRole("link", { name: /Rechercher mon vol/ }),
+    page.getByRole("link", { name: /Essayer aussi sur KAYAK/ }),
   ).toHaveAttribute(
     "href",
     new RegExp(`PAR-[A-Z]{3}/${dates.departure}/${dates.returnDate}`),
@@ -257,6 +257,18 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   expect(calls.length).toBe(2);
   expect(new URL(calls[1]).searchParams.get("from_name")).toBe("GVA");
   expect(new URL(calls[1]).searchParams.get("to_name")).toBe("LIS");
+  const searchLink = new URL(
+    (await page
+      .getByRole("link", { name: /Rechercher sur Kiwi.com/ })
+      .getAttribute("href"))!,
+  );
+  const search = new URL(
+    searchLink.searchParams.get("custom_url") || searchLink,
+  );
+  expect(search.searchParams.get("from")).toBe("GVA");
+  expect(search.searchParams.get("to")).toBe("LIS");
+  expect(search.searchParams.get("departure")).toBe(dates.departure);
+  expect(search.searchParams.get("return")).toBe(dates.returnDate);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     "https://surftrips.fr/destination/ericeira",
@@ -312,7 +324,7 @@ test("script silencieux : secours après cinq secondes", async ({ page }) => {
     { timeout: 8000 },
   );
   await expect(
-    page.getByRole("link", { name: /Rechercher mon vol/ }),
+    page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }),
   ).toBeVisible();
 });
 

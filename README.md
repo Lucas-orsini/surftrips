@@ -55,7 +55,11 @@ En Monde entier : deux zones maximum par valeur de pays existante, puis douze au
 
 Le script `https://tpemd.com/content` est chargé exclusivement dans la fiche destination avec un voyage validé. `campaign_id=111`, `promo_id=4484`, EUR, français. Les paramètres exacts sont `from_name`, `to_name`, `departure`, `return`, dates ISO conservées. Le script réel a été inspecté : il valide bien `AAAA-MM-JJ` et crée lui-même `widget-holder`.
 
-Une seule iframe `srcDoc`, remontée par clé composée des quatre paramètres de vol. Un observateur de DOM et les messages vérifiés depuis cette iframe pilotent l’état de chargement et la hauteur. Le script ne monte qu’après hydratation pour éviter un double chargement. Le partenaire confirme son contenu par un message `loaded`, dont la source et l’origine sont vérifiées. Après cinq secondes sans contenu exploitable lorsque la section approche de l’écran, le secours ouvre une recherche KAYAK avec les mêmes aéroports et dates. Le lien reste aussi disponible lorsque le widget se charge. Aucun prix n’est calculé ou stocké sur les résultats.
+Une seule iframe `srcDoc`, remontée par clé composée des quatre paramètres de vol. Un observateur de DOM et les messages vérifiés depuis cette iframe pilotent l’état de chargement et la hauteur. Le script ne monte qu’après hydratation pour éviter un double chargement. Le message `loaded`, dont la source et l’origine sont vérifiées, confirme seulement l’affichage du partenaire : il peut aussi afficher un écran sans offre. Après cinq secondes sans affichage lorsque la section approche de l’écran, le secours apparaît. Aucun prix n’est calculé ou stocké sur les résultats.
+
+Le bouton **Rechercher sur Kiwi.com** reste toujours disponible en dehors de l’iframe. Il ouvre la recherche complète avec le départ choisi (y compris `PAR`, sans le restreindre à Orly ou CDG), l’aéroport de la zone et les dates exactes. Il utilise [le contrat de liens officiel Travelpayouts](https://support.travelpayouts.com/hc/en-us/articles/360010109719-Kiwi-com-affiliate-links) : `/deep?from=…&to=…&departure=…&return=…`, encodé dans `custom_url` du lien affilié `c111.travelpayouts.com/click` avec `promo_id=3791` et `TRAVELPAYOUTS_SHMARKER`. Ce contrat est distinct de celui du widget `4484`, qui conserve ses paramètres `from_name` / `to_name`. Sans marqueur, le bouton utilise directement le lien Kiwi. Le lien KAYAK indépendant reste disponible si les domaines affiliés sont bloqués. Aucun vol n’est demandé lorsque départ et arrivée désignent le même aéroport.
+
+Diagnostic reproduit le 10 septembre 2026 : Genève → Melbourne, 10–20 août 2027. Le widget annonçait aucun voyage et proposait seulement l’accueil Kiwi sans critères ; la recherche complète avec les mêmes paramètres affichait des vols. Le bouton indépendant évite ce blocage sans modifier le DOM du partenaire. La disponibilité reste déterminée par Kiwi.
 
 L’iframe isole le DOM du partenaire de React. `allow-same-origin` est nécessaire au stockage utilisé par le script réel : cette isolation est fonctionnelle et ne constitue pas une frontière de sécurité entre origines. Les états React restent des frères de l’iframe. Les marqueurs d’affiliation sont publics ; les secrets PostgreSQL et les tokens de services ne lui sont jamais transmis.
 
@@ -79,16 +83,16 @@ npm run test:e2e
 npm run db:inspect
 ```
 
-Playwright utilise Chrome local, deux profils desktop/mobile, et les données Supabase réelles. Seul le script tiers est simulé pour tester de façon reproductible le succès, le blocage et le remontage. Deux contrôles supplémentaires utilisent le vrai widget partenaire et vérifient les attributs de préremplissage injectés. Les tests couvrent aussi les URLs, l’accessibilité axe et les largeurs 320, 390, 768, 1024 et 1440 px. `PLAYWRIGHT_BASE_URL` permet de cibler un serveur de production déjà lancé. Les tests unitaires utilisent des fixtures isolées dans `tests/`, jamais importées dans l’application.
+Playwright utilise Chrome local, deux profils desktop/mobile, et les données Supabase réelles. Seules les réponses tierces sont simulées pour tester de façon reproductible le succès, le blocage, l’écran sans offre et le remontage. Deux contrôles supplémentaires utilisent le vrai widget partenaire et suivent le lien affilié jusqu’aux résultats Kiwi pour vérifier le trajet et les dates après redirection. Les tests couvrent aussi les URLs, l’accessibilité axe et les largeurs 320, 390, 768, 1024 et 1440 px. `PLAYWRIGHT_BASE_URL` permet de cibler un serveur de production déjà lancé. Les tests unitaires utilisent des fixtures isolées dans `tests/`, jamais importées dans l’application.
 
 Les tables et politiques existantes sont documentées dans [docs/database.md](docs/database.md). Les crédits des visuels restent dans [ASSETS.md](ASSETS.md).
 
 ## Validation réalisée le 10 septembre 2026
 
 - TypeScript, ESLint et build Next.js de production réussis.
-- 19 tests unitaires et 16 tests navigateur desktop/mobile réussis, dont deux avec le widget réel.
+- 22 tests unitaires et 20 tests navigateur desktop/mobile validés, dont deux avec le widget réel et redirection affiliée jusqu’aux résultats Kiwi.
 - Parcours réel Intermédiaire / Paris / 10–20 octobre 2026 / Monde entier : douze zones Supabase, au plus deux par pays, uniquement des spots accessibles ; paramètres conservés jusqu’au widget.
-- Fiche directe, changement d’origine, instance unique, blocage publicitaire, script silencieux et iframe vide vérifiés ; contrôles axe réussis sur la landing et une fiche avec secours.
+- Fiche directe, changement d’origine, instance unique, blocage publicitaire, script silencieux, iframe vide, écran partenaire sans offre et aéroports identiques vérifiés ; contrôles axe réussis sur la landing et une fiche avec secours.
 - HTTP 429 constaté au-delà de trente requêtes sur les deux routes de recherche.
 - Aucun credential local retrouvé dans les sources versionnables ou les bundles JavaScript client ; aucun driver PostgreSQL dans ces bundles. `.env` et `.env.local` sont ignorés par Git.
 - 77 zones et 94 spots lus dans la base ; aucun schéma, enregistrement ou politique RLS modifié. Les quatre variables métier sont présentes dans la configuration locale. Les valeurs devront aussi être configurées chez l’hébergeur.

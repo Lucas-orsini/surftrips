@@ -3234,6 +3234,12 @@ h2 {
 .booking-fallback p {
   margin-bottom: 18px;
 }
+.booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
 .booking-disclosure {
   margin-top: 20px;
 }

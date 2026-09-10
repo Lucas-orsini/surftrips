@@ -12,6 +12,7 @@ function validateFlight(flight: FlightParameters) {
   if (
     !/^[A-Z]{3}$/.test(flight.origin) ||
     !/^[A-Z]{3}$/.test(flight.destination) ||
+    flight.origin === flight.destination ||
     !isValidDate(flight.departure) ||
     !isValidDate(flight.returnDate) ||
     flight.returnDate <= flight.departure
@@ -45,6 +46,35 @@ export function flightFallbackUrl(flight: FlightParameters): string {
   validateFlight(flight);
   return `https://www.kayak.fr/flights/${flight.origin}-${flight.destination}/${flight.departure}/${flight.returnDate}?sort=bestflight_a`;
 }
+// The widget can render a no-offers message and link to Kiwi's homepage,
+// dropping the trip. Keep a separate, complete search using the documented
+// Kiwi deep-link contract (different from Specific Route's parameters).
+// https://support.travelpayouts.com/hc/en-us/articles/360010109719
+export function buildKiwiSearchUrl(
+  flight: FlightParameters,
+  shmarker?: string,
+): string {
+  validateFlight(flight);
+  const search = new URL("https://www.kiwi.com/deep");
+  search.search = new URLSearchParams({
+    from: flight.origin,
+    to: flight.destination,
+    departure: flight.departure,
+    return: flight.returnDate,
+    lang: "fr",
+    currency: "eur",
+  }).toString();
+  if (!shmarker) return search.toString();
+  const affiliate = new URL("https://c111.travelpayouts.com/click");
+  affiliate.search = new URLSearchParams({
+    shmarker,
+    promo_id: "3791",
+    source_type: "customlink",
+    type: "click",
+    custom_url: search.toString(),
+  }).toString();
+  return affiliate.toString();
+}
 const escapeHtml = (value: string) =>
   value.replace(
     /[&<>"']/g,
@@ -69,8 +99,8 @@ export function widgetDocument(url: string, key: string): string {
       const content = holder && [...holder.querySelectorAll('iframe,form,input,button,a')].some(el => el.getBoundingClientRect().height > 8 && (!(el instanceof HTMLIFrameElement) || loadedFrames.has(el)));
       if (content) { ready = true; send('ready', height()); }
     };
-    // A loaded iframe can still be blank. Specific Route's embedded partner
-    // signals usable content with { loaded: true, iframeId }, not its load event.
+    // The partner reports a mounted UI, including its no-offers screen, via
+    // { loaded: true, iframeId }. This does not guarantee flight availability.
     window.addEventListener('message', event => {
       const holder = document.getElementById('widget-holder');
       if (!holder || event.data?.loaded !== true) return;

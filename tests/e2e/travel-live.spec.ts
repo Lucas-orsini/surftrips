@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 // Live read-only smoke check: no reservation, no payment, no mocked partner response.
-test("Travelpayouts réel : aéroports et dates transmis au widget partenaire", async ({
+test("Travelpayouts réel : préremplissage du widget et recherche complète Kiwi", async ({
   page,
 }, info) => {
+  test.setTimeout(60000);
   const day = new Date();
   day.setUTCDate(10);
   day.setUTCMonth(day.getUTCMonth() + 1);
@@ -39,4 +40,21 @@ test("Travelpayouts réel : aéroports et dates transmis au widget partenaire", 
         document.documentElement.clientWidth,
     ),
   ).toBe(true);
+  const [search] = await Promise.all([
+    page.waitForEvent("popup"),
+    page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }).click(),
+  ]);
+  // Follow the real affiliate redirect, not just the URL we constructed.
+  // Inventory and prices change: assert the trip on Kiwi, never a quoted fare.
+  await expect(search).toHaveURL(
+    (url) =>
+      url.hostname === "www.kiwi.com" &&
+      url.pathname.includes("/search/results/") &&
+      url.pathname.includes("paris") &&
+      url.pathname.includes("lisbonne") &&
+      url.pathname.includes(departure) &&
+      url.pathname.includes(returnDate),
+    { timeout: 30000 },
+  );
+  await search.close();
 });

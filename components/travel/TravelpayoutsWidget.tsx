@@ -4,10 +4,12 @@ const subscribe = () => () => {};
 export function TravelpayoutsWidget({
   srcDoc,
   widgetKey,
+  searchUrl,
   fallbackUrl,
 }: {
   srcDoc: string | null;
   widgetKey: string;
+  searchUrl: string;
   fallbackUrl: string;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
@@ -92,17 +94,32 @@ export function TravelpayoutsWidget({
             avec les mêmes aéroports et dates.
           </p>
         )}
-        <a
-          className={state === "fallback" ? "button" : "text-link"}
-          href={fallbackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {state === "fallback"
-            ? "Rechercher mon vol"
-            : "Ouvrir aussi la recherche de vols"}
-          <span className="sr-only"> — nouvel onglet</span>
-        </a>
+        {state === "ready" && (
+          <p>
+            Le module n’affiche pas d’offre ? Lance la recherche complète avec
+            tes aéroports et tes dates.
+          </p>
+        )}
+        <div className="booking-actions">
+          <a
+            className="button"
+            href={searchUrl}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+          >
+            Rechercher sur Kiwi.com
+            <span className="sr-only"> — nouvel onglet</span>
+          </a>
+          <a
+            className="text-link"
+            href={fallbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Essayer aussi sur KAYAK
+            <span className="sr-only"> — nouvel onglet</span>
+          </a>
+        </div>
       </div>
     </div>
   );

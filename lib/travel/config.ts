@@ -1,6 +1,7 @@
 import "server-only";
 import {
   buildWidgetUrl,
+  buildKiwiSearchUrl,
   flightFallbackUrl,
   widgetDocument,
   widgetKey,
@@ -12,6 +13,7 @@ export function bookingConfig(flight: FlightParameters) {
   const key = widgetKey(flight);
   return {
     key,
+    searchUrl: buildKiwiSearchUrl(flight, shmarker),
     fallbackUrl: flightFallbackUrl(flight),
     srcDoc:
       marker && shmarker

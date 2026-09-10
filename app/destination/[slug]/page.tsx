@@ -69,8 +69,9 @@ export default async function DestinationPage({ params, searchParams }: Props) {
         .map((z) => prepareDestination(z, criteria))
         .filter((z) => !criteria || z.compatibleSpots > 0)
     : [];
+  const sameAirport = !!criteria && criteria.origine === d.airportCode;
   const booking =
-    criteria && d.airportCode && d.compatibleSpots > 0
+    criteria && d.airportCode && d.compatibleSpots > 0 && !sameAirport
       ? bookingConfig({
           origin: criteria.origine,
           destination: d.airportCode,
@@ -266,12 +267,19 @@ export default async function DestinationPage({ params, searchParams }: Props) {
             zoneId={d.zoneId}
             criteria={criteria}
           />
+          {sameAirport && (
+            <p className="form-error" role="status">
+              Ton aéroport de départ est aussi celui de cette destination.
+              Choisis un autre aéroport de départ pour rechercher un vol.
+            </p>
+          )}
           {booking && (
             <>
               <TravelpayoutsWidget
                 key={booking.key}
                 widgetKey={booking.key}
                 srcDoc={booking.srcDoc}
+                searchUrl={booking.searchUrl}
                 fallbackUrl={booking.fallbackUrl}
               />
               <p className="booking-disclosure">
