@@ -14,7 +14,7 @@ npm run dev
 
 `.env` et `.env.local` sont ignorés par Git. Les quatre variables métier nécessaires sont `DATABASE_URL`, `DIRECT_URL`, `TRAVELPAYOUTS_MARKER`, `TRAVELPAYOUTS_SHMARKER`. La connexion utilise `DATABASE_URL`, ou `DIRECT_URL` si elle est absente. Le widget nécessite les deux marqueurs. Aucun token d’API de prix n’est utilisé. Les deux URLs PostgreSQL et les éventuels credentials Supabase restent exclusivement côté serveur ; les marqueurs d’affiliation sont les identifiants publics nécessaires au script partenaire.
 
-Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration, création de table, écriture ou secours avec données fictives. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
+Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration automatique, écriture ou secours avec données fictives. Une migration hébergement est préparée pour application manuelle après revue ; elle n’est exécutée ni par le site ni par le build. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
 
 `NEXT_PUBLIC_SITE_URL` est facultative et vaut par défaut `https://surftrips.fr`. Les variables `LEGAL_*` existantes restent à renseigner avant publication. Le premier build télécharge les polices Syne et DM Sans pour les servir localement.
 
@@ -62,6 +62,12 @@ Le bouton **Rechercher sur Kiwi.com** reste toujours disponible en dehors de l�
 Diagnostic reproduit le 10 septembre 2026 : Genève → Melbourne, 10–20 août 2027. Le widget annonçait aucun voyage et proposait seulement l’accueil Kiwi sans critères ; la recherche complète avec les mêmes paramètres affichait des vols. Le bouton indépendant évite ce blocage sans modifier le DOM du partenaire. La disponibilité reste déterminée par Kiwi.
 
 L’iframe isole le DOM du partenaire de React. `allow-same-origin` est nécessaire au stockage utilisé par le script réel : cette isolation est fonctionnelle et ne constitue pas une frontière de sécurité entre origines. Les états React restent des frères de l’iframe. Les marqueurs d’affiliation sont publics ; les secrets PostgreSQL et les tokens de services ne lui sont jamais transmis.
+
+## Hébergement et Hotels.com
+
+La section **Où dormir** des fiches destinations associe jusqu’à trois recommandations éditoriales Supabase au widget officiel Hotels.com. Elle apparaît entre les spots et les vols. Le widget fonctionne aussi sans recommandations, sans date préremplie ni données Hotels.com extraites. Son chargement est différé à l’approche de la section, avec une instance isolée par destination, le Pubref `surftrips-[zoneId]` et un secours en cas de blocage.
+
+La migration [20260912_accommodations.sql](migrations/20260912_accommodations.sql) reste à appliquer manuellement ; aucun hébergement n’a été ajouté. Les fiches, photos autorisées et liens affiliés exacts doivent être saisis par l’administrateur. `HOTELS_COM_FALLBACK_URL` peut recevoir un lien affilié général fourni par Creator Toolbox ; elle reste facultative et aucun lien n’est inventé si elle est vide. Voir [le guide hébergement](docs/accommodation.md) pour le schéma, la saisie éditoriale, les droits et les tests.
 
 ## Limitation des recherches et déploiement
 

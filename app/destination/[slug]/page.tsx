@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +17,10 @@ import {
 import { bookingConfig } from "@/lib/travel/config";
 import { TravelpayoutsWidget } from "@/components/travel/TravelpayoutsWidget";
 import { BookingForm } from "@/components/travel/BookingForm";
+import {
+  AccommodationSection,
+  AccommodationSkeleton,
+} from "@/components/accommodation/AccommodationSection";
 import { SeasonTimeline } from "@/components/destination/SeasonTimeline";
 import { Icon } from "@/components/ui/Icon";
 type Props = {
@@ -241,12 +246,24 @@ export default async function DestinationPage({ params, searchParams }: Props) {
               {criteria ? " accessibles à ton niveau" : " de la zone"}. Les
               conditions varient selon la houle et la météo.
             </p>
+            <a href="#hebergement" className="text-link accommodation-jump">
+              Trouver mon logement
+              <Icon name="arrow" size={18} />
+            </a>
             <a href="#reservation" className="button">
               Préparer mon vol
               <Icon name="arrow" size={18} />
             </a>
           </aside>
         </div>
+        <Suspense fallback={<AccommodationSkeleton />}>
+          <AccommodationSection
+            zoneId={d.zoneId}
+            name={d.name}
+            country={d.country}
+            criteria={criteria}
+          />
+        </Suspense>
         <section
           id="reservation"
           className="booking-section"

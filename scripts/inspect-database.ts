@@ -4,6 +4,10 @@ import { readQuery } from "../lib/db/index.ts";
 nextEnv.loadEnvConfig(process.cwd());
 try {
   const queries = {
+    applicationTables:
+      "SELECT table_schema,table_name,table_type FROM information_schema.tables WHERE table_schema NOT IN ('information_schema','pg_catalog') ORDER BY table_schema,table_name",
+    accommodationCandidates:
+      "SELECT table_schema,table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position",
     columns:
       "SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('zones','spots') ORDER BY table_name,ordinal_position",
     counts:

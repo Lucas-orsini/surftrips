@@ -3343,3 +3343,214 @@ h2 {
 .booking-section > .eyebrow {
   color: var(--deep);
 }
+
+.accommodation-section {
+  margin: 76px 0;
+  scroll-margin-top: 110px;
+}
+.accommodation-heading {
+  max-width: 760px;
+}
+.accommodation-heading h2 {
+  margin: 12px 0 18px;
+}
+.accommodation-intro {
+  margin: 24px 0;
+  max-width: 700px;
+}
+.accommodation-jump {
+  margin: 12px 0 22px;
+}
+.accommodation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+  margin: 30px 0 48px;
+}
+.accommodation-card {
+  min-width: 0;
+}
+.accommodation-photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--foam);
+  border-radius: 10px;
+}
+.accommodation-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.accommodation-card:hover img,
+.accommodation-card:focus-within img {
+  transform: scale(1.03);
+}
+.accommodation-card-copy {
+  padding: 20px 0;
+}
+.accommodation-card h3 {
+  font-size: 23px;
+  line-height: 1.25;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.accommodation-card .eyebrow {
+  text-transform: uppercase;
+}
+.accommodation-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.accommodation-distance {
+  font-size: 13px;
+  margin-top: 12px;
+  color: var(--muted);
+}
+.accommodation-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.accommodation-price > span:first-child {
+  color: var(--deep);
+  font-weight: 600;
+  font-size: 17px;
+}
+.accommodation-card .text-link {
+  margin-top: 22px;
+}
+.accommodation-card .text-link svg {
+  transition: transform 0.2s ease;
+}
+.accommodation-card .text-link:hover svg,
+.accommodation-card .text-link:focus-visible svg {
+  transform: translateX(3px);
+}
+.hotels-search-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 575px);
+  gap: 40px;
+  align-items: start;
+  background: var(--foam);
+  border-radius: 16px;
+  padding: 36px;
+  margin-top: 36px;
+}
+.hotels-search-copy h3 {
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin: 14px 0 20px;
+}
+.hotels-search-copy > .eyebrow {
+  color: var(--deep);
+}
+.hotels-search-copy .body-copy + .body-copy {
+  margin-top: 18px;
+}
+.hotels-search-box {
+  min-width: 0;
+  width: 100%;
+  max-width: 575px;
+  margin-inline: auto;
+}
+.hotels-destination {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.hotels-destination strong {
+  display: block;
+  font-family: var(--font-syne), sans-serif;
+  font-size: 19px;
+}
+.hotels-trip {
+  margin-top: 10px;
+  font-size: 13px;
+}
+.hotels-search-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 12px 0 20px;
+}
+.hotels-widget {
+  width: 100%;
+  max-width: 575px;
+  min-width: 0;
+}
+.hotels-widget-frame {
+  width: 100%;
+  max-width: 575px;
+  border: 0;
+}
+.hotels-widget-fallback {
+  padding: 24px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.hotels-widget-fallback .text-link {
+  margin-top: 16px;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+.hotels-fallback-link {
+  margin-top: 18px;
+}
+@media (max-width: 1100px) {
+  .hotels-search-panel {
+    grid-template-columns: 1fr;
+  }
+  .hotels-search-copy {
+    max-width: 650px;
+  }
+}
+@media (max-width: 1024px) {
+  .accommodation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .accommodation-grid {
+    grid-template-columns: 1fr;
+  }
+  .accommodation-section {
+    margin-block: 52px;
+  }
+  .hotels-search-panel {
+    padding: 22px 0;
+    gap: 24px;
+  }
+  .hotels-search-copy {
+    padding-inline: 16px;
+  }
+  .hotels-destination,
+  .hotels-trip,
+  .hotels-search-hint,
+  .hotels-widget > .booking-status,
+  .hotels-widget-fallback,
+  .hotels-fallback-link {
+    margin-inline: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .accommodation-photo img,
+  .accommodation-card .text-link svg {
+    transition: none;
+  }
+}
+@media (max-width: 420px) {
+  .hotels-search-panel {
+    margin-inline: -10px;
+  }
+}
