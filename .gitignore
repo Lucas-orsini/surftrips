@@ -26,6 +26,7 @@ next-env.d.ts
 .cache/
 .turbo/
 .npm/
+.local/
 
 # Tests, couverture et rapports Playwright
 coverage/

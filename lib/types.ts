@@ -35,6 +35,7 @@ export interface Zone {
   zoneId: string;
   name: string;
   country: string;
+  heroImagePath: string | null;
   airportCode: string | null;
   airportAlternative: string | null;
   airportName: string | null;

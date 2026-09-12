@@ -5,10 +5,13 @@ import { readQuery } from "./index.ts";
 import { adaptZone, type ZoneRow } from "./rows.ts";
 import type { DataIssue } from "../types.ts";
 
-// Existing public schema inspected on 2026-09-10. No migrations or schema writes.
+// Existing public schema inspected on 2026-09-12. No automatic schema writes.
 // Explicit columns: future internal columns cannot accidentally reach the browser.
+// JSON extraction returns NULL until the versioned hero_image_path migration is
+// applied. Only this named field is returned, never the entire JSON record.
 const ZONE_SELECT = `SELECT z.zone_id,z.nom,z.pays,z.code_aeroport,z.code_aeroport_alt,
  z.aeroport,z.transfert,z.lat_centre,z.lon_centre,z.notes,
+ to_jsonb(z)->>'hero_image_path' AS hero_image_path,
  COALESCE((SELECT jsonb_agg(jsonb_build_object(
   'spot_id',s.spot_id,'nom',s.nom,'zone_id',s.zone_id,
   'niveau_min',s.niveau_min,'niveau_ideal',s.niveau_ideal,
@@ -29,7 +32,7 @@ export const getCatalog = cache(
         await readQuery<ZoneRow>(`${ZONE_SELECT} ORDER BY z.zone_id`),
       );
     },
-    ["surf-catalog-v1"],
+    ["surf-catalog-v2-destination-images"],
     { revalidate: 60 },
   ),
 );

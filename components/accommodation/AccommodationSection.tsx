@@ -39,7 +39,7 @@ export async function AccommodationSection({
       aria-labelledby="accommodation-title"
     >
       <div className="accommodation-heading">
-        <p className="eyebrow">ENTRE DEUX SESSIONS</p>
+        <p className="eyebrow">03 — OÙ DORMIR</p>
         <h2 id="accommodation-title">Où dormir à {name} ?</h2>
         <p className="body-copy">
           Reste proche des spots, pas seulement du centre-ville.

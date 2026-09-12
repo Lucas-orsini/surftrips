@@ -44,6 +44,7 @@ function zone(id: string, country = "Test", spots = [spot()]): Zone {
     zoneId: id,
     name: id,
     country,
+    heroImagePath: null,
     spots,
     airportCode: "LIS",
     airportAlternative: null,

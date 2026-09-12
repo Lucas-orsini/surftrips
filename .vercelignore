@@ -1,0 +1,19 @@
+# Deployment receives environment variables from the existing Vercel project.
+# Local credentials, operator files and diagnostic captures must never be uploaded.
+.env*
+.local/
+.git/
+.vercel/
+.next/
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+*.log
+*.tsbuildinfo
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store

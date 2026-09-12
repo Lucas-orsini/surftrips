@@ -2,7 +2,7 @@ import "server-only";
 import { getCatalog } from "./zones";
 import { matchDestinations } from "../surf/matching";
 import { validateSearch, type SearchParams } from "../validation/search";
-import { withPhoto } from "../destinations";
+import { withDestinationImage } from "../destinations";
 export async function searchDestinations(params: SearchParams) {
   const { zones, issues } = await getCatalog();
   const countries = [...new Set(zones.map((z) => z.country))].sort((a, b) =>
@@ -20,7 +20,7 @@ export async function searchDestinations(params: SearchParams) {
     success: true as const,
     criteria: validation.data,
     countries,
-    destinations: destinations.map(withPhoto),
+    destinations: destinations.map(withDestinationImage),
     diagnostics: { issues, exclusions },
   };
 }

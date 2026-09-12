@@ -85,12 +85,24 @@ test("fiche directe sans recommandation : contenu serveur, ordre du parcours, ch
   expect(calls).toHaveLength(0);
   expect(
     await page
-      .locator("#hebergement")
+      .locator("#surf")
       .evaluate(
         (el) =>
           !!(
             el.compareDocumentPosition(
               document.getElementById("reservation")!,
+            ) & Node.DOCUMENT_POSITION_FOLLOWING
+          ),
+      ),
+  ).toBe(true);
+  expect(
+    await page
+      .locator("#reservation")
+      .evaluate(
+        (el) =>
+          !!(
+            el.compareDocumentPosition(
+              document.getElementById("hebergement")!,
             ) & Node.DOCUMENT_POSITION_FOLLOWING
           ),
       ),
@@ -117,6 +129,12 @@ test("navigation résultats → destination → autre destination : une instance
     .click();
   await expectWidget(page, "ericeira");
   await expect(page.locator(".hotels-trip")).toContainText("Ton voyage");
+  await expect(page.locator(".booking-route")).toContainText("PAR");
+  await expect(page.locator(".booking-route")).toContainText("LIS");
+  const flight = await page.locator("#reservation").boundingBox();
+  const route = await page.locator(".booking-route").boundingBox();
+  expect(route!.y).toBeGreaterThan(flight!.y);
+  expect(route!.y + route!.height).toBeLessThan(flight!.y + flight!.height);
   expect(calls).toHaveLength(1);
   await page.getByRole("link", { name: "Revenir aux résultats" }).click();
   const other = page

@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Destination, SearchCriteria } from "@/lib/types";
 import { destinationHref } from "@/lib/validation/search";
 import { SEASON_CLASS, SEASON_LABELS } from "@/lib/surf/season";
 import { Icon } from "@/components/ui/Icon";
 import { SeasonTimeline } from "./SeasonTimeline";
+import { DestinationImage } from "./DestinationImage";
 export function DestinationCard({
   destination: d,
   index = 0,
@@ -22,19 +22,13 @@ export function DestinationCard({
         href={href}
         aria-label={`Découvrir ${d.name}`}
       >
-        <div
-          className={`destination-photo ${!d.image ? "destination-photo-empty" : ""}`}
-        >
-          {d.image ? (
-            <Image
-              src={d.image}
-              alt={d.imageAlt || d.name}
-              fill
-              sizes="(max-width: 640px) 90vw, (max-width: 900px) 45vw, 31vw"
-            />
-          ) : (
-            <Icon name="wave" size={74} />
-          )}
+        <div className="destination-photo">
+          <DestinationImage
+            src={d.image}
+            name={d.name}
+            country={d.country}
+            sizes="(max-width: 760px) 90vw, (max-width: 1392px) 31vw, 407px"
+          />
           {d.seasonStatus && (
             <span
               className={`season-badge season-${SEASON_CLASS[d.seasonStatus]}`}

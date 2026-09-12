@@ -1,8 +1,16 @@
 import Image from "next/image";
 import { SearchBar } from "@/components/search/SearchBar";
 import { Icon } from "@/components/ui/Icon";
+import { DestinationImage } from "@/components/destination/DestinationImage";
+import type { Destination } from "@/lib/types";
 
-export function Hero({ countries }: { countries: string[] }) {
+export function Hero({
+  countries,
+  postcard,
+}: {
+  countries: string[];
+  postcard?: Destination;
+}) {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="container hero-grid">
@@ -69,21 +77,28 @@ export function Hero({ countries }: { countries: string[] }) {
             </div>
             <span className="hero-photo-number">01 / 03</span>
           </div>
-          <div className="hero-postcard">
-            <div className="postcard-photo">
-              <Image
-                src="/images/ericeira.jpg"
-                alt="La côte portugaise, une invitation au prochain surf trip"
-                fill
-                sizes="220px"
-              />
+          {postcard && (
+            <div className="hero-postcard">
+              <div className="postcard-photo">
+                <DestinationImage
+                  src={postcard.image}
+                  name={postcard.name}
+                  country={postcard.country}
+                  compact
+                  sizes="220px"
+                />
+              </div>
+              <div className="postcard-caption">
+                <span>
+                  {postcard.name}, {postcard.country}
+                </span>
+                <Icon name="diagonal" size={15} />
+              </div>
+              <span className="postcard-coordinates">
+                {postcard.coordinates}
+              </span>
             </div>
-            <div className="postcard-caption">
-              <span>Ericeira, Portugal</span>
-              <Icon name="diagonal" size={15} />
-            </div>
-            <span className="postcard-coordinates">38.963° N · 9.417° W</span>
-          </div>
+          )}
           <svg
             className="hero-route"
             viewBox="0 0 240 160"

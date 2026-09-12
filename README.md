@@ -14,7 +14,7 @@ npm run dev
 
 `.env` et `.env.local` sont ignorés par Git. Les quatre variables métier nécessaires sont `DATABASE_URL`, `DIRECT_URL`, `TRAVELPAYOUTS_MARKER`, `TRAVELPAYOUTS_SHMARKER`. La connexion utilise `DATABASE_URL`, ou `DIRECT_URL` si elle est absente. Le widget nécessite les deux marqueurs. Aucun token d’API de prix n’est utilisé. Les deux URLs PostgreSQL et les éventuels credentials Supabase restent exclusivement côté serveur ; les marqueurs d’affiliation sont les identifiants publics nécessaires au script partenaire.
 
-Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration automatique, écriture ou secours avec données fictives. Une migration hébergement est préparée pour application manuelle après revue ; elle n’est exécutée ni par le site ni par le build. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
+Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration automatique, écriture applicative ou secours avec données fictives. La migration image a été appliquée après autorisation explicite le 12 septembre 2026 ; la migration hébergement reste préparée pour application manuelle après revue. Aucune migration n’est exécutée par le site ou le build. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
 
 `NEXT_PUBLIC_SITE_URL` est facultative et vaut par défaut `https://surftrips.fr`. Les variables `LEGAL_*` existantes restent à renseigner avant publication. Le premier build télécharge les polices Syne et DM Sans pour les servir localement.
 
@@ -39,7 +39,9 @@ Exemple : `/recherche?niveau=intermediaire&origine=PAR&dateDepart=2026-10-10&dat
 | `lib/travel/` et `components/travel/`                        | Paramètres Specific Route, iframe, mini formulaire et secours                                                         |
 | `proxy.ts`, `lib/security/rate-limit.ts`                     | Protection des deux routes de recherche                                                                               |
 
-Les composants reçoivent des saisons, niveaux compatibles et timelines préparés côté serveur. Les pays sont chargés depuis `zones.pays`. Il n’existe pas de colonne continent ni photo : aucune n’a été inventée. Deux photographies locales existantes sont liées à leurs zones documentées ; les autres cartes utilisent un motif graphique neutre.
+Les composants reçoivent des saisons, niveaux compatibles et timelines préparés côté serveur. Les pays sont chargés depuis `zones.pays`. Il n’existe pas de colonne continent. Les photos destinations proviennent exclusivement du chemin Supabase `hero_image_path` ; la migration est appliquée et le bucket public `destinations` existe. Vingt zones ont une photo publiée ; les 57 autres utilisent le fallback graphique Surftrips. Voir [le guide des images](docs/destination-images.md) pour les prochaines sélections. `NEXT_PUBLIC_SUPABASE_URL` fournit l’origine publique du Storage, sans clé.
+
+Les [deux lots Unsplash](docs/destination-image-sources.md) contiennent vingt photographies réelles publiées, leurs crédits, les candidates comparées et leur statut de publication. Les fiches utilisent une bannière de 340/280/220 px selon l’écran ; cartes et landing gardent leur composition. Voir [les captures et contrôles](docs/destination-banners.md). Le script opérateur `scripts/publish-destination-images.ts` accepte `--manifest docs/destination-image-batch-02.json` pour le deuxième lot et vérifie le lot sans écrire par défaut ; `--publish` permet ensuite l’upload et l’association des chemins, après création manuelle du bucket et application de la migration. Il nécessite une clé serveur `SUPABASE_SECRET_KEY` ou `SUPABASE_SERVICE_ROLE_KEY` dans `.env.local`, uniquement pour cette opération ; aucune de ces clés n’est utilisée par le site.
 
 ## Règles du moteur
 
@@ -65,7 +67,7 @@ L’iframe isole le DOM du partenaire de React. `allow-same-origin` est nécessa
 
 ## Hébergement et Hotels.com
 
-La section **Où dormir** des fiches destinations associe jusqu’à trois recommandations éditoriales Supabase au widget officiel Hotels.com. Elle apparaît entre les spots et les vols. Le widget fonctionne aussi sans recommandations, sans date préremplie ni données Hotels.com extraites. Son chargement est différé à l’approche de la section, avec une instance isolée par destination, le Pubref `surftrips-[zoneId]` et un secours en cas de blocage.
+La section **Où dormir** des fiches destinations associe jusqu’à trois recommandations éditoriales Supabase au widget officiel Hotels.com. Elle apparaît juste après le vol, dans le DOM comme à l’écran : surf → vol → logement. Le widget fonctionne aussi sans recommandations, sans date préremplie ni données Hotels.com extraites. Son chargement est différé à l’approche de la section, avec une instance isolée par destination, le Pubref `surftrips-[zoneId]` et un secours en cas de blocage.
 
 La migration [20260912_accommodations.sql](migrations/20260912_accommodations.sql) reste à appliquer manuellement ; aucun hébergement n’a été ajouté. Les fiches, photos autorisées et liens affiliés exacts doivent être saisis par l’administrateur. `HOTELS_COM_FALLBACK_URL` peut recevoir un lien affilié général fourni par Creator Toolbox ; elle reste facultative et aucun lien n’est inventé si elle est vide. Voir [le guide hébergement](docs/accommodation.md) pour le schéma, la saisie éditoriale, les droits et les tests.
 
@@ -87,6 +89,7 @@ npm run build
 npm run start
 npm run test:e2e
 npm run db:inspect
+npm run test:e2e -- --config tests/images/playwright.config.ts
 ```
 
 Playwright utilise Chrome local, deux profils desktop/mobile, et les données Supabase réelles. Seules les réponses tierces sont simulées pour tester de façon reproductible le succès, le blocage, l’écran sans offre et le remontage. Deux contrôles supplémentaires utilisent le vrai widget partenaire et suivent le lien affilié jusqu’aux résultats Kiwi pour vérifier le trajet et les dates après redirection. Les tests couvrent aussi les URLs, l’accessibilité axe et les largeurs 320, 390, 768, 1024 et 1440 px. `PLAYWRIGHT_BASE_URL` permet de cibler un serveur de production déjà lancé. Les tests unitaires utilisent des fixtures isolées dans `tests/`, jamais importées dans l’application.

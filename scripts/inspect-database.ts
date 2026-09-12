@@ -4,6 +4,14 @@ import { readQuery } from "../lib/db/index.ts";
 nextEnv.loadEnvConfig(process.cwd());
 try {
   const queries = {
+    destinationImageColumns:
+      "SELECT column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='zones' AND column_name ~* '(image|photo|picture)' ORDER BY column_name",
+    destinationBuckets:
+      "SELECT id,name,public,file_size_limit,allowed_mime_types FROM storage.buckets ORDER BY id",
+    destinationObjects:
+      "SELECT name,metadata->>'mimetype' AS mime_type,metadata->>'size' AS bytes FROM storage.objects WHERE bucket_id='destinations' ORDER BY name",
+    destinationImages:
+      "SELECT zone_id,nom,pays,to_jsonb(z)->>'hero_image_path' AS hero_image_path FROM public.zones z ORDER BY zone_id",
     applicationTables:
       "SELECT table_schema,table_name,table_type FROM information_schema.tables WHERE table_schema NOT IN ('information_schema','pg_catalog') ORDER BY table_schema,table_name",
     accommodationCandidates:

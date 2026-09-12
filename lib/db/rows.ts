@@ -1,6 +1,7 @@
 import type { DataIssue, SurfSpot, Zone } from "../types.ts";
 import { isSurfLevel } from "../surf/levels.ts";
 import { isMonth } from "../surf/season.ts";
+import { isDestinationImagePath } from "../images/destination.ts";
 // PostgreSQL numeric is returned as text by pg; nullable fields stay nullable.
 export interface SpotRow {
   spot_id: string;
@@ -20,6 +21,7 @@ export interface ZoneRow {
   zone_id: string;
   nom: string;
   pays: string;
+  hero_image_path: string | null;
   code_aeroport: string | null;
   code_aeroport_alt: string | null;
   aeroport: string | null;
@@ -78,10 +80,23 @@ export function adaptZone(row: ZoneRow, issues: DataIssue[]): Zone {
       field: "code_aeroport",
       value: row.code_aeroport,
     });
+  const heroImagePath =
+    isDestinationImagePath(row.hero_image_path) &&
+    row.hero_image_path.startsWith(`${row.zone_id}/`)
+      ? row.hero_image_path
+      : null;
+  if (row.hero_image_path != null && !heroImagePath)
+    issues.push({
+      entity: "zones",
+      id: row.zone_id,
+      field: "hero_image_path",
+      value: row.hero_image_path,
+    });
   return {
     zoneId: row.zone_id,
     name: row.nom,
     country: row.pays,
+    heroImagePath,
     airportCode,
     airportAlternative: row.code_aeroport_alt,
     airportName: row.aeroport,

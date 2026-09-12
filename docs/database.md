@@ -1,8 +1,8 @@
 # Inspection de la base existante — 10 septembre 2026
 
-Connexion PostgreSQL au pooler Supabase, TLS vérifié avec le certificat CA public officiel. Toutes les inspections et requêtes applicatives utilisent des transactions `READ ONLY`. Aucune table, donnée ou politique n’a été créée ou modifiée.
+Connexion PostgreSQL au pooler Supabase, TLS vérifié avec le certificat CA public officiel. Toutes les inspections et requêtes applicatives utilisent des transactions `READ ONLY`. L’inspection initiale du 10 septembre ne modifiait aucune table, donnée ou politique. La publication image autorisée du 12 septembre est décrite ci-dessous.
 
-77 zones, 94 spots et 39 pays présents lors du contrôle. Les colonnes demandées existent. Les budgets existants ne sont pas utilisés. Aucune colonne photo ou continent n’existe : les pays proposés viennent de `zones.pays`, les photos locales restent liées uniquement à Ericeira et Taghazout. Aucun autre média n’est présenté comme une photographie de destination.
+77 zones, 94 spots et 39 pays présents lors du contrôle. Les colonnes demandées existent. Les budgets existants ne sont pas utilisés. Aucune colonne continent n’existe : les pays proposés viennent de `zones.pays`. La colonne photo était absente au contrôle initial ; après autorisation explicite, `20260912_destination_hero_image.sql` a été appliquée le 12 septembre 2026. Vingt zones ont maintenant un `hero_image_path` relié à une photo vérifiée du bucket public `destinations` ; 57 conservent le fallback. Voir [le guide et l’inventaire des images](destination-images.md).
 
 `lat_centre` et `lon_centre` sont des `numeric`, `transfert` est du texte, les saisons sont deux entiers, les niveaux sont des enums PostgreSQL. La jointure est `spots.zone_id = zones.zone_id`. Tous les mois inspectés sont entre 1 et 12.
 

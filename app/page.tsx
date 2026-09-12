@@ -24,7 +24,12 @@ export default async function Home() {
     .slice(0, 3);
   return (
     <main id="main-content">
-      <Hero countries={countries} />
+      <Hero
+        countries={countries}
+        postcard={
+          destinations.find((d) => d.zoneId === "ericeira") || featured[0]
+        }
+      />
       <SwellLine />
       <EditorialSection />
       <DestinationsSection destinations={featured} />

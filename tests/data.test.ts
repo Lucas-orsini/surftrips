@@ -6,6 +6,7 @@ const row: ZoneRow = {
   zone_id: "test",
   nom: "Test",
   pays: "Test",
+  hero_image_path: null,
   code_aeroport: "LIS",
   code_aeroport_alt: null,
   aeroport: null,
@@ -62,4 +63,25 @@ test("niveau minimum inconnu, coordonnées et saison invalides sont isolés", ()
   assert.ok(
     issues.some((i) => i.field === "niveau_min" && i.id === "test-spot"),
   );
+});
+test("image : chemin de la zone conservé, autre zone ou URL isolée en diagnostic", () => {
+  assert.equal(
+    adaptZone({ ...row, hero_image_path: "test/hero.webp" }, []).heroImagePath,
+    "test/hero.webp",
+  );
+  for (const path of [
+    "other/hero.webp",
+    "https://example.com/hero.webp",
+    "test/../hero.webp",
+  ]) {
+    const issues: DataIssue[] = [];
+    assert.equal(
+      adaptZone({ ...row, hero_image_path: path }, issues).heroImagePath,
+      null,
+    );
+    assert.deepEqual(
+      issues.find((issue) => issue.field === "hero_image_path"),
+      { entity: "zones", id: "test", field: "hero_image_path", value: path },
+    );
+  }
 });

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getZone, getOtherZones } from "@/lib/db/zones";
-import { withPhoto } from "@/lib/destinations";
+import { withDestinationImage } from "@/lib/destinations";
 import { prepareDestination } from "@/lib/surf/matching";
 import { LEVEL_LABELS } from "@/lib/surf/levels";
 import { SEASON_LABELS } from "@/lib/surf/season";
@@ -14,9 +13,9 @@ import {
   searchQuery,
   type SearchParams,
 } from "@/lib/validation/search";
-import { bookingConfig } from "@/lib/travel/config";
-import { TravelpayoutsWidget } from "@/components/travel/TravelpayoutsWidget";
-import { BookingForm } from "@/components/travel/BookingForm";
+import { FlightSection } from "@/components/travel/FlightSection";
+import { DestinationHero } from "@/components/destination/DestinationHero";
+import { DestinationImage } from "@/components/destination/DestinationImage";
 import {
   AccommodationSection,
   AccommodationSkeleton,
@@ -68,22 +67,12 @@ export default async function DestinationPage({ params, searchParams }: Props) {
       )
     : null;
   const criteria = validation?.success ? validation.data : undefined;
-  const d = withPhoto(prepareDestination(zone, criteria));
+  const d = withDestinationImage(prepareDestination(zone, criteria));
   const related = zone.airportCode
     ? (await getOtherZones(zone.airportCode, zone.zoneId))
-        .map((z) => prepareDestination(z, criteria))
+        .map((z) => withDestinationImage(prepareDestination(z, criteria)))
         .filter((z) => !criteria || z.compatibleSpots > 0)
     : [];
-  const sameAirport = !!criteria && criteria.origine === d.airportCode;
-  const booking =
-    criteria && d.airportCode && d.compatibleSpots > 0 && !sameAirport
-      ? bookingConfig({
-          origin: criteria.origine,
-          destination: d.airportCode,
-          departure: criteria.dateDepart,
-          returnDate: criteria.dateRetour,
-        })
-      : null;
   return (
     <main id="main-content" className="destination-page">
       <div className="container">
@@ -96,32 +85,10 @@ export default async function DestinationPage({ params, searchParams }: Props) {
           <Icon name="arrow" size={17} />
           {criteria ? "Revenir aux résultats" : "Toutes les destinations"}
         </Link>
-        <div className="detail-heading">
+        <DestinationHero destination={d} />
+        <div id="surf" className="detail-grid">
           <div>
-            <p className="eyebrow">{d.country}</p>
-            <h1>
-              {d.name}
-              <span className="text-ocean">.</span>
-            </h1>
-            <p>Les spots, la saison, ton prochain départ.</p>
-          </div>
-          <span className="detail-coordinates">{d.coordinates}</span>
-        </div>
-        {d.image && (
-          <div className="detail-photo">
-            <Image
-              src={d.image}
-              alt={d.imageAlt || d.name}
-              fill
-              preload
-              sizes="(max-width:1400px) 95vw,1280px"
-              quality={85}
-            />
-          </div>
-        )}
-        <div className="detail-grid">
-          <div>
-            <p className="eyebrow">L’ESPRIT DU SPOT</p>
+            <p className="eyebrow">01 — SURFER</p>
             <h2>Ton prochain terrain de jeu.</h2>
             {d.notes && <p className="body-copy">{d.notes}</p>}
             <h3>
@@ -246,16 +213,23 @@ export default async function DestinationPage({ params, searchParams }: Props) {
               {criteria ? " accessibles à ton niveau" : " de la zone"}. Les
               conditions varient selon la houle et la météo.
             </p>
-            <a href="#hebergement" className="text-link accommodation-jump">
-              Trouver mon logement
-              <Icon name="arrow" size={18} />
-            </a>
             <a href="#reservation" className="button">
               Préparer mon vol
               <Icon name="arrow" size={18} />
             </a>
+            <a href="#hebergement" className="text-link accommodation-jump">
+              Trouver mon logement
+              <Icon name="arrow" size={18} />
+            </a>
           </aside>
         </div>
+        <FlightSection
+          destination={d}
+          criteria={criteria}
+          error={
+            validation && !validation.success ? validation.error : undefined
+          }
+        />
         <Suspense fallback={<AccommodationSkeleton />}>
           <AccommodationSection
             zoneId={d.zoneId}
@@ -264,51 +238,6 @@ export default async function DestinationPage({ params, searchParams }: Props) {
             criteria={criteria}
           />
         </Suspense>
-        <section
-          id="reservation"
-          className="booking-section"
-          aria-labelledby="booking-title"
-        >
-          <p className="eyebrow">DU DÉPART À LA VAGUE</p>
-          <h2 id="booking-title">Ton vol vers {d.name}.</h2>
-          <p className="body-copy">
-            Choisis ton départ et tes dates pour préparer le voyage.
-          </p>
-          {validation && !validation.success && (
-            <p className="form-error" role="alert">
-              {validation.error}
-            </p>
-          )}
-          <BookingForm
-            key={JSON.stringify(criteria)}
-            zoneId={d.zoneId}
-            criteria={criteria}
-          />
-          {sameAirport && (
-            <p className="form-error" role="status">
-              Ton aéroport de départ est aussi celui de cette destination.
-              Choisis un autre aéroport de départ pour rechercher un vol.
-            </p>
-          )}
-          {booking && (
-            <>
-              <TravelpayoutsWidget
-                key={booking.key}
-                widgetKey={booking.key}
-                srcDoc={booking.srcDoc}
-                searchUrl={booking.searchUrl}
-                fallbackUrl={booking.fallbackUrl}
-              />
-              <p className="booking-disclosure">
-                Module partenaire Travelpayouts. La réservation s’effectue
-                auprès du partenaire ; Surftrips peut percevoir une commission.
-              </p>
-            </>
-          )}
-          {!d.airportCode && (
-            <p>L’aéroport d’arrivée reste à préciser pour cette destination.</p>
-          )}
-        </section>
         {!!related.length && (
           <section className="related-zones">
             <p className="eyebrow">LE MÊME VOL, D’AUTRES HORIZONS</p>
@@ -320,9 +249,21 @@ export default async function DestinationPage({ params, searchParams }: Props) {
                 <Link
                   key={other.zoneId}
                   href={destinationHref(other.zoneId, criteria)}
-                  className="text-link"
+                  className="related-zone-link"
                 >
-                  {other.name}
+                  <span className="related-zone-photo">
+                    <DestinationImage
+                      src={other.image}
+                      name={other.name}
+                      country={other.country}
+                      sizes="88px"
+                      compact
+                    />
+                  </span>
+                  <span>
+                    {other.name}
+                    <small>{other.country}</small>
+                  </span>
                   <Icon name="arrow" size={18} />
                 </Link>
               ))}

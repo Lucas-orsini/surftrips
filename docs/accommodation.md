@@ -1,6 +1,6 @@
 # Hébergements éditoriaux et Hotels.com
 
-La section `/destination/[zoneId]#hebergement` se situe entre les spots et le vol. Son contenu et les cartes sont rendus côté serveur. Expedia ne fournit aucune donnée aux recommandations Surftrips : aucun prix, disponibilité, note, chambre ou photo n’est extrait du widget ou d’Hotels.com.
+La section `/destination/[zoneId]#hebergement` se situe après les spots et le vol. Son contenu et les cartes sont rendus côté serveur. Expedia ne fournit aucune donnée aux recommandations Surftrips : aucun prix, disponibilité, note, chambre ou photo n’est extrait du widget ou d’Hotels.com.
 
 ## Schéma et migration
 
@@ -57,7 +57,7 @@ Y coller un **lien affilié général Hotels.com fourni par Creator Toolbox**. T
 Validation du 12 septembre 2026 : TypeScript, lint et build Next.js réussis ; 27 tests unitaires et 32 tests navigateur validés. Les contrôles d’accessibilité et de largeur ont été relancés après correction du contraste, avec succès. Widget réel testé sur ordinateur et aux largeurs 575, 375 et 320 px. Aucun secret trouvé dans les sources versionnables ou les bundles client, aucun driver PostgreSQL dans ces bundles. Aucun changement appliqué au schéma ni aux données Supabase.
 
 - Tests unitaires : adaptation sans invention, URLs, champs absents, types, gammes et attributs d’affiliation/Pubref.
-- Navigateur avec Supabase réelle : fiche sans recommandations, navigation depuis `/search` et entre destinations, ordre surf → logement → vol, exclusion SEO du document d’intégration, blocage et nouvelle tentative.
+- Navigateur avec Supabase réelle : fiche sans recommandations, navigation depuis `/search` et entre destinations, ordre surf → vol → logement, exclusion SEO du document d’intégration, blocage et nouvelle tentative.
 - Rendu des cartes avec trois fixtures techniques **isolées dans les tests**, sans hôtel réel ou fictif inséré en base ; URLs example.com, aucun prix, photo ou tracking Expedia inventé. Vérification des liens et des dispositions 3 / 2 / 1 colonnes.
 - Widget Expedia réel : contrôle de chargement et de géométrie sur ordinateur et mobile, sans extraction des données du widget.
 
@@ -77,7 +77,7 @@ Créés :
 
 Modifiés :
 
-- `app/destination/[slug]/page.tsx`, `app/globals.css` : placement logement avant vol, lien d’accès et styles du design existant.
+- `app/destination/[slug]/page.tsx`, `app/globals.css` : placement logement après vol, lien d’accès et styles du design existant.
 - `.env.example`, `README.md` : configuration facultative et instructions.
 - `scripts/inspect-database.ts` : inspection des tables et colonnes existantes.
 - `components/ui/Icon.tsx` : source JSX React explicite, pour tester le rendu serveur sans le transformateur de composants Playwright ; aucun changement visuel.
