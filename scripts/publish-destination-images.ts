@@ -12,7 +12,7 @@ import {
 } from "../lib/images/destination.ts";
 
 // Operator-only utility. Never imported by Next.js, never run at build/start.
-// No Unsplash scraping, discovery or download. Only publishes the reviewed local batch.
+// No Unsplash scraping, discovery or download. Only publishes reviewed local images.
 nextEnv.loadEnvConfig(process.cwd());
 interface Entry {
   zone_id: string;
@@ -24,6 +24,10 @@ interface Entry {
   storage_path: string;
   bytes: number;
   sha256: string;
+  source?: string;
+  license?: string;
+  license_url?: string;
+  attribution_required?: boolean;
 }
 let client: Client | undefined;
 try {
@@ -39,7 +43,11 @@ try {
   });
   const publish = values.publish;
   const manifestPath = values.manifest;
-  if (!/^docs\/destination-image-batch(?:-\d{2})?\.json$/.test(manifestPath))
+  if (
+    !/^docs\/destination-image-(?:batch(?:-\d{2})?|completion|final-seven)\.json$/.test(
+      manifestPath,
+    )
+  )
     throw new Error("MANIFESTE_INVALIDE");
   const { images } = JSON.parse(await readFile(manifestPath, "utf8")) as {
     images: Entry[];
@@ -47,22 +55,124 @@ try {
   if (
     !Array.isArray(images) ||
     !images.length ||
-    images.length > 15 ||
+    images.length > 77 ||
     new Set(images.map((e) => e.zone_id)).size !== images.length
   )
     throw new Error("LOT_INVALIDE");
+  const finalSeven = manifestPath === "docs/destination-image-final-seven.json";
+  if (finalSeven) {
+    const allowed = new Set([
+      "chicama",
+      "pavones",
+      "punaauia",
+      "lobitos",
+      "nias-lagundri",
+      "pohnpei",
+      "santa-rosa-cr",
+    ]);
+    const protectedIds = new Set<string>();
+    for (const previous of [
+      "docs/destination-image-batch.json",
+      "docs/destination-image-batch-02.json",
+      "docs/destination-image-completion.json",
+    ]) {
+      const prior = JSON.parse(await readFile(previous, "utf8")) as {
+        images: Entry[];
+      };
+      for (const entry of prior.images) protectedIds.add(entry.zone_id);
+    }
+    if (
+      protectedIds.size !== 70 ||
+      images.some((e) => !allowed.has(e.zone_id) || protectedIds.has(e.zone_id))
+    )
+      throw new Error("PHOTO_EXISTANTE_NON_REMPLACEE");
+    if (
+      new Set(images.map((e) => e.source_url)).size !== images.length ||
+      new Set(images.map((e) => e.sha256)).size !== images.length
+    )
+      throw new Error("PHOTO_DUPLIQUEE");
+    const { destinationPhotoCredit } = await import("../lib/images/credits.ts");
+    for (const entry of images) {
+      const credit = destinationPhotoCredit(entry.storage_path);
+      if (
+        entry.attribution_required &&
+        (!credit ||
+          credit.sourceUrl !== entry.source_url ||
+          credit.photographer !== entry.photographer ||
+          credit.license !== entry.license ||
+          credit.licenseUrl !== entry.license_url)
+      )
+        throw new Error("ATTRIBUTION_VISIBLE_A_PREPARER");
+    }
+  }
+  if (manifestPath === "docs/destination-image-completion.json") {
+    // These previously published photographs are outside the completion scope.
+    const protectedIds = new Set<string>();
+    for (const previous of [
+      "docs/destination-image-batch.json",
+      "docs/destination-image-batch-02.json",
+    ]) {
+      const manifest = JSON.parse(await readFile(previous, "utf8")) as {
+        images: Entry[];
+      };
+      for (const entry of manifest.images) protectedIds.add(entry.zone_id);
+    }
+    if (images.some((entry) => protectedIds.has(entry.zone_id)))
+      throw new Error("PHOTO_EXISTANTE_NON_REMPLACEE");
+    if (
+      new Set(images.map((entry) => entry.source_url)).size !== images.length ||
+      new Set(images.map((entry) => entry.sha256)).size !== images.length
+    )
+      throw new Error("PHOTO_DUPLIQUEE");
+  }
   const origin = destinationStorageOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL);
   if (!origin) throw new Error("URL_STORAGE_MANQUANTE");
   const files = new Map<string, Buffer>();
   for (const entry of images) {
+    const unsplash =
+      /^https:\/\/unsplash\.com\/photos\/[a-zA-Z0-9_-]+$/.test(
+        entry.source_url,
+      ) &&
+      /^https:\/\/unsplash\.com\/@[a-zA-Z0-9_-]+$/.test(entry.photographer_url);
+    const reviewedSource =
+      finalSeven &&
+      ((entry.source === "Pexels" &&
+        /^https:\/\/www\.pexels\.com\/photo\/[a-z0-9-]+\/$/.test(
+          entry.source_url,
+        ) &&
+        /^https:\/\/www\.pexels\.com\/@[a-z0-9-]+\/$/.test(
+          entry.photographer_url,
+        ) &&
+        entry.license === "Pexels License" &&
+        entry.license_url === "https://www.pexels.com/license/" &&
+        entry.attribution_required === false) ||
+        (entry.source === "Wikimedia Commons" &&
+          entry.source_url.startsWith(
+            "https://commons.wikimedia.org/wiki/File:",
+          ) &&
+          ["commons.wikimedia.org", "www.flickr.com"].includes(
+            new URL(entry.photographer_url).hostname,
+          ) &&
+          ((entry.license === "CC BY-SA 4.0" &&
+            entry.license_url ===
+              "https://creativecommons.org/licenses/by-sa/4.0/" &&
+            entry.attribution_required === true) ||
+            (entry.license === "CC BY 2.0" &&
+              entry.license_url ===
+                "https://creativecommons.org/licenses/by/2.0/" &&
+              entry.attribution_required === true) ||
+            (entry.license === "CC0 1.0" &&
+              entry.license_url ===
+                "https://creativecommons.org/publicdomain/zero/1.0/" &&
+              entry.attribution_required === false) ||
+            (entry.license === "Public Domain (PD-self)" &&
+              entry.license_url === `${entry.source_url}#Licensing` &&
+              entry.attribution_required === false))));
     if (
       !/^[a-z0-9-]+$/.test(entry.zone_id) ||
       entry.storage_path !== `${entry.zone_id}/hero.webp` ||
       !entry.photographer ||
-      !/^https:\/\/unsplash\.com\/photos\/[a-zA-Z0-9_-]+$/.test(
-        entry.source_url,
-      ) ||
-      !/^https:\/\/unsplash\.com\/@[a-zA-Z0-9_-]+$/.test(entry.photographer_url)
+      !(unsplash || reviewedSource)
     )
       throw new Error("SOURCE_OU_CHEMIN_INVALIDE");
     const file = await readFile(
@@ -107,7 +217,10 @@ try {
     const zone = zones.find((z) => z.zone_id === entry.zone_id);
     if (!zone || zone.nom !== entry.destination || zone.pays !== entry.country)
       throw new Error("DESTINATION_A_REVERIFIER");
-    if (zone.hero_image_path && zone.hero_image_path !== entry.storage_path)
+    if (
+      zone.hero_image_path?.trim() &&
+      zone.hero_image_path !== entry.storage_path
+    )
       throw new Error("PHOTO_EXISTANTE_NON_REMPLACEE");
   }
   if (!publish) {
@@ -182,7 +295,7 @@ try {
         throw new Error("VERIFICATION_IMAGE_PUBLIQUE_ECHOUEE");
       // Only link an uploaded, publicly verified object, atomically against concurrent edits.
       const update = await client.query(
-        "UPDATE public.zones SET hero_image_path=$1 WHERE zone_id=$2 AND nom=$3 AND pays=$4 AND (hero_image_path IS NULL OR hero_image_path=$1) RETURNING zone_id",
+        "UPDATE public.zones SET hero_image_path=$1 WHERE zone_id=$2 AND nom=$3 AND pays=$4 AND (hero_image_path IS NULL OR btrim(hero_image_path)='' OR hero_image_path=$1) RETURNING zone_id",
         [entry.storage_path, entry.zone_id, entry.destination, entry.country],
       );
       if (update.rowCount !== 1)

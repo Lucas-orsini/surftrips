@@ -82,11 +82,11 @@ test("Storage réel : photos publiées, refresh, ordre DOM et fallback", async (
   }
   await page.reload();
   await expect(hero).toHaveAttribute("data-image-state", "ready");
-  await page.goto("/destination/aguadilla");
+  await page.goto("/destination/pavones");
   await expect(hero).toHaveAttribute("data-image-state", "fallback");
   await expect(hero.locator("img")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Aguadilla",
+    "Pavones",
   );
   expect(imageFailures).toEqual([]);
 });

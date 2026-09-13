@@ -99,7 +99,7 @@ test("bannière : quatre largeurs, informations visibles, CLS et fallback identi
       path: `test-results/banner-${width}.png`,
       scale: "css",
     });
-    await page.goto("/destination/aguadilla");
+    await page.goto("/destination/pavones");
     await expect(banner.locator(".destination-visual")).toHaveAttribute(
       "data-image-state",
       "fallback",

@@ -2,7 +2,7 @@
 
 ## État au 12 septembre 2026
 
-**20 photographies publiées dans Supabase, en deux lots de dix, le 12 septembre 2026.** Les 57 autres zones conservent leur fallback ; le catalogue contient toujours 77 zones. Les dix photos du premier lot sont inchangées.
+**76 photographies publiées dans Supabase pour 77 zones, le 12 septembre 2026.** La dernière passe sur les sept exceptions a ajouté six photos : seul Pavones conserve le fallback. Les 70 photos antérieures sont inchangées, chemins et empreintes publiques vérifiés. Les bilans des lots précédents restent conservés ci-dessous comme historique.
 
 L’inspection initiale ne trouvait ni colonne image ni bucket. Après autorisation explicite de l’utilisateur et configuration de la clé serveur, la migration `20260912_destination_hero_image.sql` a été appliquée et le bucket public `destinations` créé via l’API officielle Storage. Il accepte uniquement WebP/AVIF, au maximum 500000 octets. Les dix uploads et associations ont été vérifiés ; RLS reste active sur `zones`, `spots` et `storage.objects`. Aucune politique d’écriture publique n’a été ajoutée.
 
@@ -170,6 +170,209 @@ Commande de vérification sans écriture :
 node --experimental-strip-types scripts/publish-destination-images.ts --manifest docs/destination-image-batch-02.json
 ```
 
-Ajouter `--publish` uniquement pour publier/reprendre un lot préparé et autorisé. Le script accepte au maximum quinze destinations, conserve par défaut le premier manifeste et refuse d’écraser une image différente. Les fichiers locaux restent sous `.local/destination-images/<zone_id>/hero.webp`.
+Ajouter `--publish` uniquement pour publier/reprendre un lot préparé et autorisé. Le script accepte désormais au maximum 77 destinations, conserve par défaut le premier manifeste et refuse d’écraser une image différente. Les fichiers locaux restent sous `.local/destination-images/<zone_id>/hero.webp`.
 
 [Planche des recadrages du deuxième lot](../.local/destination-banners/batch-02-crops.jpg). [Compte rendu de la bannière et vérifications navigateur](destination-banners.md).
+
+
+## Complétion des 57 zones restantes — 12 septembre 2026
+
+**50 publications, 7 exceptions ; total final : 70 images sur 77 zones.** Aucun déploiement Vercel. Aucune modification de schéma, bucket, politique Storage, recherche, composants ou widgets. Seuls les nouveaux cadrages spécifiques sont ajoutés dans `lib/images/banner.ts`.
+
+Sélection par navigation web normale sur Unsplash, lecture de la localisation/légende et de la licence standard, puis téléchargement des fichiers publics des photos explicitement choisies. Pas de scraping, API privée, source Unsplash+ ou image générée. Les erreurs 403/429 et pages indisponibles n’ont pas été contournées. La localisation déclarée reste une indication du photographe, pas une preuve GPS indépendante. Les photos sont éditoriales : elles ne promettent pas les conditions de surf actuelles.
+
+### Registre des 50 nouvelles photographies
+
+Bucket public : **destinations**. Les chemins sont relatifs au bucket. Chaque fichier est un WebP 1600 × 1000, inférieur à 500000 octets. Date d’ajout et de publication : 2026-09-12. Le [manifeste complet](destination-image-completion.json) contient aussi les URL des fichiers sources, preuves de localisation, SHA-256 et recherches des sept exceptions.
+
+| zone_id | Destination | Pays | source_url | photographer / photographer_url | date_added | storage_path | poids_final |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `aguadilla` | Aguadilla / Rincon | Porto Rico | [Unsplash](https://unsplash.com/photos/ocean-waves-crashing-on-shore-during-daytime-UnEc30IJ81E) | [Harry Gillen](https://unsplash.com/@gillenha) | 2026-09-12 | `aguadilla/hero.webp` | 239408 octets |
+| `arica` | Arica | Chili | [Unsplash](https://unsplash.com/photos/aerial-view-of-city-buildings-near-sea-during-daytime-ReighfSNSc8) | [Jorge Montesinos](https://unsplash.com/@montecom) | 2026-09-12 | `arica/hero.webp` | 225224 octets |
+| `bali-cote-est` | Bali cote est (Keramas) | Indonesie | [Unsplash](https://unsplash.com/photos/a-group-of-boats-floating-on-top-of-a-body-of-water-2vGnl_OgMLs) | [Simerpreet Cheema](https://unsplash.com/@sscheema) | 2026-09-12 | `bali-cote-est/hero.webp` | 176080 octets |
+| `bathsheba` | Bathsheba | Barbade | [Unsplash](https://unsplash.com/photos/brown-rock-formation-on-sea-shore-during-daytime-BRcVfkqEvg8) | [JR Harris](https://unsplash.com/@orrell_mount) | 2026-09-12 | `bathsheba/hero.webp` | 254630 octets |
+| `bocas-del-toro` | Bocas del Toro | Panama | [Unsplash](https://unsplash.com/photos/a-tropical-beach-with-palm-trees-and-clear-water-BOVBjxW743U) | [Jorge Mendez](https://unsplash.com/@memoska) | 2026-09-12 | `bocas-del-toro/hero.webp` | 433850 octets |
+| `carrapateira` | Carrapateira (Algarve ouest) | Portugal | [Unsplash](https://unsplash.com/photos/photography-of-seashore-during-daytime-cmYjQ30PbWk) | [Diego Gennaro](https://unsplash.com/@_nnaro_) | 2026-09-12 | `carrapateira/hero.webp` | 371190 octets |
+| `coolangatta` | Coolangatta (Gold Coast sud) | Australie | [Unsplash](https://unsplash.com/photos/person-surfing-on-sea-waves-under-blue-sky-during-daytime-FdR7rZZCdt0) | [Tahlia Doyle](https://unsplash.com/@tahliaclaire) | 2026-09-12 | `coolangatta/hero.webp` | 138076 octets |
+| `dakar` | Dakar (Ouakam/Ngor) | Senegal | [Unsplash](https://unsplash.com/photos/turquoise-ocean-water-with-a-distant-coastline-and-buildings-auX5lm71cQk) | [Dodji ABAH-DAKOU](https://unsplash.com/@mawss) | 2026-09-12 | `dakar/hero.webp` | 143880 octets |
+| `desert-point-lombok` | Desert Point (Lombok sud-ouest) | Indonesie | [Unsplash](https://unsplash.com/photos/aerial-view-of-beach-during-daytime-vFTT3mSWi6s) | [Süleyman Coskun](https://unsplash.com/@sulox32) | 2026-09-12 | `desert-point-lombok/hero.webp` | 365438 octets |
+| `fernando-de-noronha` | Fernando de Noronha | Bresil | [Unsplash](https://unsplash.com/photos/cliff-near-ocean-during-daytime-LLXhVppSMeA) | [Jaime Spaniol](https://unsplash.com/@jaimespaniol) | 2026-09-12 | `fernando-de-noronha/hero.webp` | 353546 octets |
+| `g-land` | G-Land (Alas Purwo, Java) | Indonesie | [Unsplash](https://unsplash.com/photos/a-view-of-the-ocean-from-a-high-viewpoint-SXfxVAj9mcE) | [fajar raihan](https://unsplash.com/@harithdamncutecat) | 2026-09-12 | `g-land/hero.webp` | 259368 octets |
+| `guethary` | Guethary / Bidart | France | [Unsplash](https://unsplash.com/photos/a-person-standing-on-a-rocky-beach-y8MkdXB3WRI) | [Laura V.](https://unsplash.com/@lauravsn_) | 2026-09-12 | `guethary/hero.webp` | 205816 octets |
+| `half-moon-bay` | Half Moon Bay | Etats-Unis | [Unsplash](https://unsplash.com/photos/a-view-of-the-ocean-from-a-hill-DaNeSbU3kz4) | [Ben Moreland](https://unsplash.com/@relentlessjpg) | 2026-09-12 | `half-moon-bay/hero.webp` | 232000 octets |
+| `huntington-newport` | Huntington / Newport Beach | Etats-Unis | [Unsplash](https://unsplash.com/photos/a-red-and-white-building-sitting-on-top-of-a-pier-next-to-the-ocean-X91bwWokll4) | [Jenn Bible](https://unsplash.com/@jennbible) | 2026-09-12 | `huntington-newport/hero.webp` | 182212 octets |
+| `jardim-do-mar` | Jardim do Mar (Madere) | Portugal | [Unsplash](https://unsplash.com/photos/water-waves-0zgYFRzaDTE) | [Colin Watts](https://unsplash.com/@colinwatts) | 2026-09-12 | `jardim-do-mar/hero.webp` | 231110 octets |
+| `kenting` | Kenting / Jialeshui (Taiwan) | Taiwan | [Unsplash](https://unsplash.com/photos/grass-field-near-seashore-sJHhk6bUaxY) | [Timo Volz](https://unsplash.com/@magict1911) | 2026-09-12 | `kenting/hero.webp` | 313238 octets |
+| `la-libertad` | La Libertad / El Tunco | Salvador | [Unsplash](https://unsplash.com/photos/man-surfing-on-sea-during-daytime-DnQ6DhHvcU4) | [Michael Vilorio](https://unsplash.com/@oreovilorio) | 2026-09-12 | `la-libertad/hero.webp` | 208452 octets |
+| `la-santa` | La Santa (Lanzarote) | Espagne | [Unsplash](https://unsplash.com/photos/ocean-waves-crashing-on-shore-during-daytime-oYR1694u9Lo) | [John Oswald](https://unsplash.com/@johnoswald) | 2026-09-12 | `la-santa/hero.webp` | 172330 octets |
+| `malibu` | Malibu | Etats-Unis | [Unsplash](https://unsplash.com/photos/green-trees-on-mountain-beside-blue-sea-under-blue-sky-during-daytime-SDtCt-EQ0HU) | [Carl Newton](https://unsplash.com/@carl_newton) | 2026-09-12 | `malibu/hero.webp` | 232044 octets |
+| `martinique-nord` | Nord Martinique (Le Precheur) | Martinique (FR) | [Unsplash](https://unsplash.com/photos/a-beach-with-boats-in-the-water-and-a-hill-in-the-background-78FvFHdU9Ss) | [Katie Heath](https://unsplash.com/@kklod) | 2026-09-12 | `martinique-nord/hero.webp` | 433008 octets |
+| `maui-nord-ouest` | Maui nord-ouest (Kapalua) | Etats-Unis (Hawaii) | [Unsplash](https://unsplash.com/photos/a-rocky-beach-with-a-body-of-water-in-the-background-zk4T-pkyl38) | [Justin Busa](https://unsplash.com/@justinbusa) | 2026-09-12 | `maui-nord-ouest/hero.webp` | 211862 octets |
+| `mentawai` | Iles Mentawai | Indonesie | [Unsplash](https://unsplash.com/photos/a-man-riding-a-wave-on-top-of-a-surfboard-RfpPINBADTw) | [Keaton Dickinson](https://unsplash.com/@samewayco) | 2026-09-12 | `mentawai/hero.webp` | 184264 octets |
+| `mompiche` | Mompiche | Equateur | [Unsplash](https://unsplash.com/photos/palm-trees-on-brown-sand-under-white-cloudy-sky-during-daytime-9oYcyaC_NdM) | [Andrés Salgado](https://unsplash.com/@rodans_01) | 2026-09-12 | `mompiche/hero.webp` | 101166 octets |
+| `moorea` | Moorea (Haapiti) | Polynesie francaise (FR) | [Unsplash](https://unsplash.com/photos/a-tropical-beach-with-palm-trees-and-blue-water-GfqLxp1JY8c) | [Roméo A.](https://unsplash.com/@gronemo) | 2026-09-12 | `moorea/hero.webp` | 262604 octets |
+| `nord-fuerteventura` | Nord Fuerteventura (Corralejo/Majanicho) | Espagne | [Unsplash](https://unsplash.com/photos/a-view-of-the-ocean-from-the-shore-of-a-beach-wi8N-SrUzA4) | [Markus Wagner](https://unsplash.com/@omena_kolme) | 2026-09-12 | `nord-fuerteventura/hero.webp` | 173602 octets |
+| `north-male` | Atoll Nord Male | Maldives | [Unsplash](https://unsplash.com/photos/aerial-view-of-a-lush-green-island-paradise-NH5aICDhTyQ) | [hampu](https://unsplash.com/@hampu) | 2026-09-12 | `north-male/hero.webp` | 491902 octets |
+| `north-shore-oahu` | North Shore Oahu (Haleiwa/Pupukea) | Etats-Unis (Hawaii) | [Unsplash](https://unsplash.com/photos/surfer-surfing-on-tidal-wave-v5gGwubKzEA) | [Johannes Andersson](https://unsplash.com/@thejoltjoker) | 2026-09-12 | `north-shore-oahu/hero.webp` | 251210 octets |
+| `pantin` | Pantin (Galice) | Espagne | [Unsplash](https://unsplash.com/photos/an-aerial-view-of-a-beach-with-waves-crashing-on-the-shore-CCLSap1AO3A) | [Jack Swords](https://unsplash.com/@jswords) | 2026-09-12 | `pantin/hero.webp` | 352774 octets |
+| `pichilemu` | Pichilemu | Chili | [Unsplash](https://unsplash.com/photos/a-group-of-surfers-riding-a-wave-RmoZo0N11O4) | [Paul Berthelon Bravo](https://unsplash.com/@paulberthelon) | 2026-09-12 | `pichilemu/hero.webp` | 255728 octets |
+| `popoyo` | Popoyo / Tola | Nicaragua | [Unsplash](https://unsplash.com/photos/waves-crashing-through-shore-KCJKsJPe9pQ) | [Sam Hull](https://unsplash.com/@hamsull) | 2026-09-12 | `popoyo/hero.webp` | 273820 octets |
+| `puerto-escondido` | Puerto Escondido | Mexique | [Unsplash](https://unsplash.com/photos/a-large-wave-crashing-into-the-shore-of-the-ocean-uMY0W-gp1tw) | [Crisoforo Gaspar Hernandez](https://unsplash.com/@mitogh) | 2026-09-12 | `puerto-escondido/hero.webp` | 125806 octets |
+| `puerto-viejo` | Puerto Viejo de Talamanca | Costa Rica | [Unsplash](https://unsplash.com/photos/olas-del-mar-rompiendo-en-la-costa-durante-la-puesta-de-sol-4YsJ1egituc) | [Milada Vigerova](https://unsplash.com/@milada_vigerova) | 2026-09-12 | `puerto-viejo/hero.webp` | 71076 octets |
+| `putzu-idu` | Putzu Idu / Capo Mannu (Sardaigne) | Italie | [Unsplash](https://unsplash.com/photos/high-angle-photo-of-ocean-P45bsq-O_L8) | [Léonard Cotte](https://unsplash.com/@ettocl) | 2026-09-12 | `putzu-idu/hero.webp` | 368182 octets |
+| `rapa-nui` | Hanga Roa (Ile de Paques) | Chili | [Unsplash](https://unsplash.com/photos/ocean-waves-crashing-on-rocks-during-sunset-CbqIqEgqJbw) | [Franz Nawrath](https://unsplash.com/@franz_nawrath) | 2026-09-12 | `rapa-nui/hero.webp` | 155914 octets |
+| `safi` | Safi | Maroc | [Unsplash](https://unsplash.com/photos/ocean-waves-under-blue-sky-during-daytime-JqoRzl4F6xg) | [Abdelhamid Azoui](https://unsplash.com/@abdelhamid_az) | 2026-09-12 | `safi/hero.webp` | 189372 octets |
+| `saint-leu` | Saint-Leu | La Reunion (FR) | [Unsplash](https://unsplash.com/photos/a-beach-with-a-body-of-water-8NHLGyaSWAk) | [Kristy An](https://unsplash.com/@kanamo25) | 2026-09-12 | `saint-leu/hero.webp` | 361888 octets |
+| `sal` | Santa Maria (Sal) | Cap-Vert | [Unsplash](https://unsplash.com/photos/blue-ocean-4BNLArlwQZA) | [Martin Widenka](https://unsplash.com/@widenka) | 2026-09-12 | `sal/hero.webp` | 231318 octets |
+| `san-clemente` | San Clemente | Etats-Unis | [Unsplash](https://unsplash.com/photos/a-surfer-riding-a-wave-zxwmgDtkCjE) | [Slav Romanov](https://unsplash.com/@slavromanov) | 2026-09-12 | `san-clemente/hero.webp` | 304818 octets |
+| `san-cristobal-galapagos` | San Cristobal (Galapagos) | Equateur | [Unsplash](https://unsplash.com/photos/a-large-rock-outcropping-next-to-a-body-of-water-2rWejl1BABE) | [Nicolas Martin](https://unsplash.com/@red_dot_nick) | 2026-09-12 | `san-cristobal-galapagos/hero.webp` | 485680 octets |
+| `san-diego` | San Diego (La Jolla) | Etats-Unis | [Unsplash](https://unsplash.com/photos/people-on-beach-during-daytime-eJBUPEHnvFY) | [Johanna Zender](https://unsplash.com/@johannavzender) | 2026-09-12 | `san-diego/hero.webp` | 459336 octets |
+| `santa-barbara` | Santa Barbara / Carpinteria | Etats-Unis | [Unsplash](https://unsplash.com/photos/the-sun-is-setting-over-the-ocean-on-the-beach-cbic7pLDzJ0) | [Keara Turner](https://unsplash.com/@kmcturner) | 2026-09-12 | `santa-barbara/hero.webp` | 436530 octets |
+| `santa-catalina-pa` | Santa Catalina | Panama | [Unsplash](https://unsplash.com/photos/silhouette-of-people-on-beach-during-sunset-FHRQf5psG-Q) | [Marien Raat](https://unsplash.com/@raatmarien) | 2026-09-12 | `santa-catalina-pa/hero.webp` | 98056 octets |
+| `sumba-ouest` | Sumba ouest | Indonesie | [Unsplash](https://unsplash.com/photos/palm-trees-frame-a-beach-and-ocean-view-N38BCz8EY1I) | [Fadhil Abhimantra](https://unsplash.com/@fabhimantra) | 2026-09-12 | `sumba-ouest/hero.webp` | 404548 octets |
+| `tamarin` | Tamarin | Ile Maurice | [Unsplash](https://unsplash.com/photos/a-beach-with-a-mountain-in-the-background-I_NtbGeuVFM) | [Daren Inshape](https://unsplash.com/@clickedbydaren) | 2026-09-12 | `tamarin/hero.webp` | 165906 octets |
+| `tavarua` | Tavarua / Namotu | Fidji | [Unsplash](https://unsplash.com/photos/aerial-view-of-a-tropical-island-resort-and-turquoise-sea-A2xmF0o3-pE) | [Irvin Liang](https://unsplash.com/@il07) | 2026-09-12 | `tavarua/hero.webp` | 302342 octets |
+| `teahupoo` | Teahupo'o (presqu'ile de Tahiti) | Polynesie francaise (FR) | [Unsplash](https://unsplash.com/photos/sea-wave-beside-rainbow-Z4arn7dEJCU) | [Lucie Dawson](https://unsplash.com/@luciedawson_) | 2026-09-12 | `teahupoo/hero.webp` | 33848 octets |
+| `thurso` | Thurso (Ecosse) | Royaume-Uni | [Unsplash](https://unsplash.com/photos/person-riding-on-horse-running-in-seashore-1nPPNXTMcjk) | [Annie Spratt](https://unsplash.com/@anniespratt) | 2026-09-12 | `thurso/hero.webp` | 100050 octets |
+| `tofo` | Tofo | Mozambique | [Unsplash](https://unsplash.com/photos/a-person-walking-on-a-beach-with-a-surfboard-_zfsjBFxpzE) | [Omoniyi David](https://unsplash.com/@mocream_coffee) | 2026-09-12 | `tofo/hero.webp` | 228770 octets |
+| `unstad` | Unstad (Lofoten) | Norvege | [Unsplash](https://unsplash.com/photos/rocky-coastline-with-ocean-waves-and-mountains-at-twilight-jKVA2F-5QWA) | [David Becker](https://unsplash.com/@beckerworks) | 2026-09-12 | `unstad/hero.webp` | 299198 octets |
+| `walvis-bay` | Walvis Bay / Skeleton Bay | Namibie | [Unsplash](https://unsplash.com/photos/sand-dunes-meet-the-ocean-under-a-clear-blue-sky-hJKRf9_KbhU) | [NIR HIMI](https://unsplash.com/@nirhimi) | 2026-09-12 | `walvis-bay/hero.webp` | 132378 octets |
+
+### Localisation déclarée et périmètre géographique
+
+Les vues voisines/régionales ci-dessous illustrent l’environnement de la zone ; elles ne sont pas présentées comme une photographie du break précis. Cette distinction est notamment importante pour Bali côte est, Desert Point, Moorea, G-Land, Tavarua/Namotu, le nord de la Martinique, Putzu Idu, Unstad et Walvis Bay.
+
+- **aguadilla** — Rincon, Rincón, Puerto Rico.
+- **arica** — Arica, Arica y Parinacota, Chile.
+- **bathsheba** — Bathsheba, Barbados.
+- **coolangatta** — Coolangatta, Australia.
+- **fernando-de-noronha** — Fernando de Noronha, Pernambuco, Brasil.
+- **half-moon-bay** — Half Moon Bay, CA, USA.
+- **jardim-do-mar** — Jardim do Mar, Madeira, Portugal.
+- **kenting** — Kenting, southern Taiwan (caption).
+- **la-libertad** — El Tunco, El Salvador.
+- **la-santa** — Calle el Quemao, La Santa, Lanzarote, Spain.
+- **mentawai** — Mentawai Islands Regency, West Sumatra, Indonesia.
+- **mompiche** — Mompiche, Ecuador (caption); Muisne municipality (location).
+- **nord-fuerteventura** — Corralejo, Spain; view towards Isla Los Lobos.
+- **rapa-nui** — Hanga Roa, Isla de Pascua, Chile.
+- **safi** — Safi, Maroc.
+- **sal** — Santa Maria, Cape Verde.
+- **pantin** — Pantín beach, Spain.
+- **maui-nord-ouest** — Point between Kapalua Bay and Namalu Bay, Maui (caption).
+- **malibu** — Point Dume, Malibu, California (caption).
+- **santa-catalina-pa** — Santa Catalina, Panama.
+- **tamarin** — Tamarin, Mauritius.
+- **tofo** — Tofo Beach, Mozambique.
+- **bocas-del-toro** — Playa Drago, Bocas del Toro, Panamá (caption).
+- **guethary** — Guéthary, France.
+- **sumba-ouest** — Sumba Barat Daya, East Nusa Tenggara, Indonesia.
+- **saint-leu** — Plage des Alizées, Saint-Leu, Réunion.
+- **pichilemu** — Punta de Lobos, Pichilemu, Chile.
+- **north-male** — Thulusdhoo, North Malé Atoll (caption).
+- **moorea** — Moorea, Moorea-Maiao, Polynésie française — île représentative; Haapiti non attesté.
+- **huntington-newport** — Huntington Beach pier, CA, USA.
+- **san-clemente** — San Clemente, CA, USA.
+- **puerto-escondido** — Zicatela, Oaxaca, Mexico.
+- **santa-barbara** — Carpinteria, CA, USA.
+- **martinique-nord** — Saint-Pierre, Martinique — côte voisine du Prêcheur.
+- **desert-point-lombok** — Gili Kedis, Sekotong Barat, West Lombok — région du sud-ouest; ne représente pas le break de Desert Point.
+- **north-shore-oahu** — Banzai Pipeline, Haleiwa, United States.
+- **g-land** — Parc Alas Purwo selon la légende; plage précise non nommée, géotag du siège du parc.
+- **teahupoo** — Teahupo'o, French Polynesia.
+- **dakar** — Ile de Ngor, Dakar, Sénégal.
+- **tavarua** — Mamanuca Islands, Fiji — archipel; Tavarua / Namotu non attestées.
+- **san-cristobal-galapagos** — Kicker Rock / León Dormido, au large de San Cristóbal, Ecuador.
+- **unstad** — La page source indique Uttakleiv Beach, Leknes, Norvège. Côte immédiatement voisine sur Vestvågøy, au sud-ouest d’Unstad ; ce paysage ne représente pas la plage d’Unstad elle-même. Recadrage de la source sur les montagnes et les vagues..
+- **thurso** — Dunnet Beach, Thurso, United Kingdom.
+- **san-diego** — La Jolla, San Diego, CA, USA.
+- **walvis-bay** — Sandwich Harbour, Anichab, Namibia — côte régionale au sud de Walvis Bay; pas le break de Skeleton Bay.
+- **puerto-viejo** — Puerto Viejo de Talamanca, Costa Rica.
+- **carrapateira** — Praia da Bordeira, Carrapateira, Algarve, Portugal.
+- **popoyo** — Rancho Santana, Tola, Nicaragua — côte voisine de Popoyo.
+- **bali-cote-est** — La page source indique Sanur, Bali, Indonesia. Côte orientale de Bali, au sud-ouest de Keramas : visuel régional, pas une photographie du spot de Keramas..
+- **putzu-idu** — Tharros, San Giovanni di Sinis, Cabras, Italy — péninsule du Sinis; pas le break de Capo Mannu.
+
+### Sept destinations en fallback à la fin de la passe Unsplash
+
+Ces exceptions décrivent les limites de la sélection effectuée, sans prétendre qu’aucune photo appropriée n’existe sur Internet. Aucune association ni fichier n’a été créé pour ces zones.
+
+| zone_id | Destination | Pourquoi le fallback est conservé |
+| --- | --- | --- |
+| `chicama` | Puerto Malabrigo / Chicama, Perou | Aucune photographie côtière Unsplash localisée de façon suffisamment fiable à Chicama ou Puerto Malabrigo n’a été retenue. Résultats hors sujet ou pages indisponibles ; aucune image générique du Pérou substituée. |
+| `lobitos` | Lobitos, Perou | Trois candidates examinées : bateau sur cadrage vertical sans littoral exploitable, puis portraits/personnes. Le double recadrage détruit le sujet ; aucune candidate de paysage suffisamment adaptée. Candidates : [YQud06QkMdI](https://unsplash.com/photos/YQud06QkMdI), [K0j5P6bKqGA](https://unsplash.com/photos/K0j5P6bKqGA), [JpT8Tsajxto](https://unsplash.com/photos/JpT8Tsajxto). |
+| `nias-lagundri` | Lagundri Bay (Nias), Indonesie | Les photos trouvées pour Nias montrent notamment Gunungsitoli, un aéroport ou des personnes ; elles n’attestent pas le littoral de Lagundri/Sorake. Une autre partie de l’île n’a pas été utilisée pour remplir artificiellement cette zone. |
+| `pavones` | Pavones, Costa Rica | Aucun paysage côtier Unsplash dont la localisation à Pavones ou Punta Banco soit assez fiable n’a été retenu. La page de recherche directe n’était pas accessible ; pas de contournement. |
+| `pohnpei` | Pohnpei, Micronesie | Une source côtière identifiée répondait 403 et n’a pas été contournée. Alternative de cascade inadaptée ; les photos de Nate Cheney n’indiquent pas leur lieu de prise de vue, et le lieu du profil du photographe ne constitue pas une preuve. Candidates : [d779xu7rxQs](https://unsplash.com/photos/d779xu7rxQs), [OeJxnpH_AYw](https://unsplash.com/photos/OeJxnpH_AYw), [Nv53bdnHyMI](https://unsplash.com/photos/Nv53bdnHyMI), [iPrYNHEBieE](https://unsplash.com/photos/iPrYNHEBieE). |
+| `punaauia` | Punaauia (Tahiti ouest), Polynesie francaise (FR) | Aucune photo côtière Unsplash suffisamment attribuable à Punaauia/Vaiava n’a été retenue. Les visuels génériques de Tahiti et les images promotionnelles de complexes de Papeete ne vérifient pas cette destination. |
+| `santa-rosa-cr` | Parc Santa Rosa (Guanacaste), Costa Rica | Les résultats Playa Naranjo repérés concernent notamment le ferry du golfe de Nicoya, pas la plage du parc Santa Rosa. Les images Junquillal trouvées concernent la côte de Santa Cruz, pas la baie voisine du parc. Homonymes écartés. Candidates : [CuH8YkpQ57g](https://unsplash.com/photos/CuH8YkpQ57g). |
+
+### Optimisation et contrôle
+
+Préparation avec `scripts/prepare-destination-image.mjs`. Deux sources ont été recadrées avant conversion pour conserver leur sujet : Unstad/Uttakleiv (montagnes et vagues) et Teahupo’o (vague et arc-en-ciel). Atoll Nord Malé utilise WebP qualité 60, effort 6 : la végétation détaillée dépassait la limite du bucket avec le réglage habituel ; fichier final de 491902 octets, inspecté visuellement. Aucune retouche de couleur ni agrandissement artificiel.
+
+Les 70 objets publics répondent HTTP 200 et correspondent aux empreintes des manifestes ; les 20 précédents sont inchangés. Les 70 identifiants de photos sont distincts. Aucun gros logo, portrait rapproché ou texte incrusté important repéré dans les images retenues. Les légendes/alt de l’application restent issus du nom et du pays réels.
+
+[Planche des 77 zones](../.local/destination-completion/contact-77.jpg) · [Périmètre des 57 zones examinées, exceptions visibles](../.local/destination-completion/contact-57-scope.jpg) · [Les 50 nouvelles photos uniquement](../.local/destination-completion/contact-50-new.jpg) · [Audit public et inventaire final](../.local/destination-completion/publication-audit.json).
+
+
+## Dernière passe sur les sept exceptions — 12 septembre 2026
+
+**Six nouvelles publications, total : 76 images / 77 zones. Pavones reste en fallback.** Les 70 images existantes sont préservées octet pour octet et leurs chemins sont inchangés. Aucun déploiement Vercel. Aucune modification du schéma ou du bucket, des coordonnées, du moteur surf ou des widgets.
+
+Toutes les nouvelles images font **1600 × 1000, WebP, moins de 500 000 octets**. Originaux sélectionnés manuellement sur des pages publiques ; métadonnées des fichiers Commons confirmées avec l’API publique officielle MediaWiki. Aucun scraping Unsplash, aucune API privée, aucune image générée.
+
+### Sources et droits des six photos publiées
+
+| zone_id | Destination | Pays | Source originale | Photographe | Licence | Attribution visible requise | Chemin dans destinations | Poids final | Date |
+|---|---|---|---|---|---|---|---|---|---|
+| `chicama` | Puerto Malabrigo / Chicama | Perou | [Pexels](https://www.pexels.com/photo/birds-flying-over-the-sea-with-silhouette-of-person-standing-on-a-cliff-4109127/) | [Viajero Cool](https://www.pexels.com/@viajerocool/) | [Pexels License](https://www.pexels.com/license/) | Non | `chicama/hero.webp` | 156174 octets | 2026-09-12 |
+| `lobitos` | Lobitos | Perou | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Vista_del_balneario_de_Lobitos,_Talara_-_Piura.jpg) | [German Ato Zavala](https://commons.wikimedia.org/wiki/Special:Contributions/Germanato.zava94) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Oui — ajoutée dans l’application | `lobitos/hero.webp` | 269156 octets | 2026-09-12 |
+| `nias-lagundri` | Lagundri Bay (Nias) | Indonesie | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Singa_nasi_Sorake.jpg) | [Edison Zega A.Lewi](https://commons.wikimedia.org/wiki/User:Edison_Zega_A.Lewi) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Non | `nias-lagundri/hero.webp` | 241914 octets | 2026-09-12 |
+| `pohnpei` | Pohnpei | Micronesie | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pohnpei_lagoon_from_plane.jpg) | [Zykasaa](https://commons.wikimedia.org/wiki/Special:Contributions/Zykasaa) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Oui — ajoutée dans l’application | `pohnpei/hero.webp` | 329290 octets | 2026-09-12 |
+| `punaauia` | Punaauia (Tahiti ouest) | Polynesie francaise (FR) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Coucher_de_soleil_sur_Moorea.jpg) | [Rioga98](https://commons.wikimedia.org/wiki/User:Rioga98~commonswiki) | [Public Domain (PD-self)](https://commons.wikimedia.org/wiki/File:Coucher_de_soleil_sur_Moorea.jpg#Licensing) | Non | `punaauia/hero.webp` | 57176 octets | 2026-09-12 |
+| `santa-rosa-cr` | Parc Santa Rosa (Guanacaste) | Costa Rica | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Roca_Bruja_-_Guanacaste_-_Costa_Rica.jpg) | [dog4aday](https://www.flickr.com/people/dog4aday/) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) | Oui — ajoutée dans l’application | `santa-rosa-cr/hero.webp` | 99428 octets | 2026-09-12 |
+
+Les sources CDN, dimensions originales, SHA-256, modifications et positions sont conservés dans [le manifeste de cette passe](destination-image-final-seven.json). Le fichier est stocké dans le bucket public `destinations` ; PostgreSQL contient seulement le chemin relatif.
+
+- **Puerto Malabrigo / Chicama** — La page du photographe indique Puerto Malabrigo, La Libertad, Peru, le lieu de la zone Chicama. Côte et vagues, silhouette lointaine. Cadrage : `center`.
+- **Lobitos** — Description de l’auteur : balneario de Lobitos, province de Talara, Piura, nord du Pérou. Jetée et côte de Lobitos. La longitude positive de la fiche Commons est incohérente avec son lieu explicite ; ne pas la reprendre. Supabase indique correctement -81.282. Cadrage : `center 40%`.
+- **Lagundri Bay (Nias)** — Œuvre personnelle légendée Sorake Beach Side. Même côte et récif que les vues géolocalisées Pantai Sorake et Ndulu pantai sorake (0.570520 N, 97.731969 E). Sorake borde Lagundri Bay. Anomalie distincte en base : latitude de la zone et du spot négative ; aucune correction effectuée. Cadrage : `center 40%`.
+- **Pohnpei** — Œuvre personnelle : vue aérienne du lagon de Pohnpei, îlots Sapwtik et Deke Sokehs explicitement nommés par l’auteur. Côte nord de Pohnpei ; image représentative de la zone, sans prétendre montrer la vague P-Pass. Cadrage : `center 35%`.
+- **Punaauia (Tahiti ouest)** — L’auteur précise que la vue de Moorea est prise depuis la commune de Punaauia à Tahiti. Le premier plan est la côte et le lagon de Punaauia ; ne pas présenter Moorea à l’horizon comme Tahiti. Cadrage : `center 95%`.
+- **Parc Santa Rosa (Guanacaste)** — Roca Bruja / Witch’s Rock, plage du parc national Santa Rosa au Guanacaste. Correspond au spot Playa Naranjo (Witch’s Rock) associé à santa-rosa-cr, et non aux lieux homonymes. Cadrage : `center 55%`.
+
+### Attribution et adaptations
+
+Les licences [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) et [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) autorisent l’usage commercial et le recadrage sous leurs conditions. Les trois crédits nécessaires sont centralisés dans `lib/images/credits.ts` et rendus côté serveur : auteur, titre lié à la source, licence liée à son texte, mention du recadrage et de la conversion WebP. Les adaptations BY-SA restent diffusées sous **CC BY-SA 4.0** ; aucune restriction supplémentaire n’est appliquée à ces images. Les crédits sont placés près de la bannière, sous les photos des cartes, après les suggestions concernées et dans les mentions légales. `DestinationHero` et `DestinationImage` restent inchangés.
+
+Les trois autres photos sont sous [licence Pexels](https://www.pexels.com/license/), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) ou cession explicite au domaine public par l’auteur (PD-self, avec autorisation mondiale sans conditions). Leur attribution n’est pas obligatoire ; leurs auteurs restent systématiquement documentés ici. Les dérivés Storage contiennent aussi auteur, source, licence et modifications dans leurs métadonnées XMP, sans reprendre les données EXIF personnelles de la prise de vue.
+
+**Déploiement :** la version publique inspectée lors de cette passe ne consommait pas encore les images Supabase (page Lobitos sans aucune image). Le code d’attribution fait partie du travail local et doit impérativement accompagner le prochain déploiement des bannières. Ne pas déployer une ancienne version dépourvue de ces crédits avec les nouvelles associations Storage. Aucun déploiement effectué ici.
+
+### Pavones : recherches et rejets précis
+
+Lieu vérifié en base : **Pavones, Costa Rica, 8.391 N / 83.133 W**, spot `pavones`. Ne pas confondre avec Pavones en Espagne ou le district intérieur de Turrialba.
+
+Recherches effectuées : Pavones Costa Rica, Playa Pavones, Pavones surf/beach/coast, Punta Banco Costa Rica ; recherches exactes sur Unsplash, Pexels, Wikimedia Commons et Pixabay, puis vérification des originaux identifiables.
+
+| Candidate ou source examinée | Localisation / droits | Motif de rejet |
+|---|---|---|
+| [Playa Pavones — Arturo Sotillo / Wha’ppen](https://www.flickr.com/photos/whappen/1337575712/) ; [taille originale](https://www.flickr.com/photos/whappen/1337575712/sizes/o/) | L’auteur décrit bien la plage de Pavones ; CC BY-SA 2.0 | Original **800 × 600** seulement, confirmé par la page de téléchargement publique. Impossible d’obtenir 1600 × 1000 sans agrandissement artificiel. |
+| [Beachview in Punta Banco, Costa Rica — Froukjevd](https://commons.wikimedia.org/wiki/File:Beachview_in_Punta_Banco,_Costa_Rica.jpg) | Côte immédiatement voisine ; GPS 8.347419 N / 83.126228 W ; CC BY-SA 4.0 | **640 × 480**, aucune résolution supérieure sur la fiche de l’auteur. |
+| [Pavones sur Pexels](https://www.pexels.com/search/pavones/) et recherches exactes | Résultats surtout consacrés aux paons ou à d’autres côtes du Costa Rica | Aucun fichier suffisamment bien localisé retenu ; pas de substitution par une plage éloignée. |
+| Unsplash et Pixabay | Variantes Pavones / Playa Pavones / Punta Banco, recherches géographiques exactes | Aucune nouvelle candidate à la fois localisable et appropriée au format requis. |
+| [Candidate Hippopx annoncée Pavones](https://www.hippopx.com/en/free-photo-amkri) | L’index annonce une image 6000 × 4000 et un usage commercial | Auteur et provenance originale non vérifiables ; accès HTTP 403, aucun contournement. Un libellé « public domain » non traçable ne suffit pas. |
+
+Les candidates annoncées sous **CC BY-NC**, **CC BY-NC-ND** ou **CC BY-ND** n’ont pas été publiées : ces restrictions ne conviennent pas à l’usage commercial et/ou au recadrage prévu. La mention de licence d’un site agrégateur n’a jamais été traitée comme une preuve suffisante sans vérification de l’original.
+
+### Anomalie de coordonnées signalée, sans modification
+
+`zones.zone_id = nias-lagundri` : `lat_centre = -0.573000`.
+`spots.spot_id = lagundri-bay` : `lat = -0.573000`.
+
+Les vues de Sorake géolocalisées par leurs auteurs, notamment [Pantai Sorake](https://commons.wikimedia.org/wiki/File:Pantai_Sorake.jpg) et [Ndulu pantai sorake](https://commons.wikimedia.org/wiki/File:Ndulu_pantai_sorake.jpg), situent la côte vers **+0.570520 / 97.731969**, donc au nord de l’équateur. Le signe de latitude en base nécessite une vérification éditoriale. Aucune valeur n’a été corrigée hors `hero_image_path`.
+
+### Vérifications de publication
+
+Audit Supabase final : **77 zones, 76 chemins associés, 1 fallback (Pavones)**. Les 76 fichiers publics répondent HTTP 200, ont des SHA-256 distincts et correspondent aux manifestes ; les 70 précédents sont inchangés. [Audit détaillé local](../.local/destination-final-seven/publication-audit.json). Les captures et résultats de validation sont récapitulés dans [le compte rendu de cette passe](destination-image-final-seven.md).

@@ -2,7 +2,7 @@
 
 ## État inspecté le 12 septembre 2026
 
-La base réelle contient **77 zones**, dont **20 disposent maintenant d’une image** et 57 utilisent le fallback. Lors de l’inspection initiale, la colonne et le bucket étaient absents. Après autorisation explicite, la migration image a été appliquée et le bucket public `destinations` créé via l’API Storage. Deux [lots Unsplash de dix photos](destination-image-sources.md) ont été publiés le 12 septembre 2026. Le deuxième conserve intégralement le premier.
+La base réelle contient **77 zones**, dont **76 disposent maintenant d’une image** ; seul Pavones utilise le fallback. Lors de l’inspection initiale, la colonne et le bucket étaient absents. Après autorisation explicite, la migration image a été appliquée et le bucket public `destinations` créé via l’API Storage. Le [registre des sources](destination-image-sources.md) conserve les 70 photos Unsplash intactes, puis six nouvelles publications Pexels / Wikimedia Commons. Voir le [bilan de la dernière passe](destination-image-final-seven.md), notamment les attributions obligatoires à conserver au prochain déploiement.
 
 La migration [20260912_destination_hero_image.sql](../migrations/20260912_destination_hero_image.sql), maintenant appliquée sur cette base, ajoute `zones.hero_image_path`, nullable, avec validation du chemin et du dossier de la zone. Elle ne s’exécute jamais au démarrage ou au build et ne doit pas être rejouée ici. La projection SQL reste compatible avec un environnement non migré. Les chemins invalides sont isolés dans le diagnostic serveur. RLS reste active sur `zones`, `spots` et `storage.objects` ; aucune politique d’écriture publique n’a été ajoutée.
 
@@ -22,7 +22,7 @@ La clé administrative Storage a été configurée localement pour l’opératio
 
 ## Préparer une photo localement
 
-Deux [lots de dix images Unsplash](destination-image-sources.md) sont maintenant publiés, avec sources et photographes documentés. Le registre précise les fichiers disponibles et la procédure de publication assistée. Pour les prochains lots, la préparation seule ne crée ni bucket ni association en base.
+Les [76 images](destination-image-sources.md) sont maintenant publiées, avec sources, photographes et licences documentés. Le registre précise les fichiers disponibles et la procédure de publication assistée. Pour les prochains lots, la préparation seule ne crée ni bucket ni association en base. Pour une licence imposant une attribution, préparer aussi le crédit visible et conserver les métadonnées de droits du dérivé avant publication.
 
 ```sh
 node scripts/prepare-destination-image.mjs chemin/source.jpg chemin/sortie/hero.webp
@@ -61,64 +61,8 @@ Ce test lance une **application Next.js isolée** sous `tests/fixtures/destinati
 
 ## Zones sans image associée
 
-**57 zones** restent sans image après le deuxième lot du 12 septembre 2026. Inventaire lu dans la base réelle ; aucune destination n’est à insérer.
+**Une seule zone** reste sans image après la dernière passe sur les sept exceptions. Le catalogue réel compte désormais **77 zones, 76 images, 1 fallback**. Les sources et motifs de rejet sont détaillés dans le [compte rendu](destination-image-final-seven.md#pavones-reste-sans-photo).
 
-| zone_id                   | Zone                                     | Pays                     |
-| ------------------------- | ---------------------------------------- | ------------------------ |
-| `aguadilla`               | Aguadilla / Rincon                       | Porto Rico               |
-| `arica`                   | Arica                                    | Chili                    |
-| `bali-cote-est`           | Bali cote est (Keramas)                  | Indonesie                |
-| `bathsheba`               | Bathsheba                                | Barbade                  |
-| `bocas-del-toro`          | Bocas del Toro                           | Panama                   |
-| `carrapateira`            | Carrapateira (Algarve ouest)             | Portugal                 |
-| `chicama`                 | Puerto Malabrigo / Chicama               | Perou                    |
-| `coolangatta`             | Coolangatta (Gold Coast sud)             | Australie                |
-| `dakar`                   | Dakar (Ouakam/Ngor)                      | Senegal                  |
-| `desert-point-lombok`     | Desert Point (Lombok sud-ouest)          | Indonesie                |
-| `fernando-de-noronha`     | Fernando de Noronha                      | Bresil                   |
-| `g-land`                  | G-Land (Alas Purwo, Java)                | Indonesie                |
-| `guethary`                | Guethary / Bidart                        | France                   |
-| `half-moon-bay`           | Half Moon Bay                            | Etats-Unis               |
-| `huntington-newport`      | Huntington / Newport Beach               | Etats-Unis               |
-| `jardim-do-mar`           | Jardim do Mar (Madere)                   | Portugal                 |
-| `kenting`                 | Kenting / Jialeshui (Taiwan)             | Taiwan                   |
-| `la-libertad`             | La Libertad / El Tunco                   | Salvador                 |
-| `la-santa`                | La Santa (Lanzarote)                     | Espagne                  |
-| `lobitos`                 | Lobitos                                  | Perou                    |
-| `malibu`                  | Malibu                                   | Etats-Unis               |
-| `martinique-nord`         | Nord Martinique (Le Precheur)            | Martinique (FR)          |
-| `maui-nord-ouest`         | Maui nord-ouest (Kapalua)                | Etats-Unis (Hawaii)      |
-| `mentawai`                | Iles Mentawai                            | Indonesie                |
-| `mompiche`                | Mompiche                                 | Equateur                 |
-| `moorea`                  | Moorea (Haapiti)                         | Polynesie francaise (FR) |
-| `nias-lagundri`           | Lagundri Bay (Nias)                      | Indonesie                |
-| `nord-fuerteventura`      | Nord Fuerteventura (Corralejo/Majanicho) | Espagne                  |
-| `north-male`              | Atoll Nord Male                          | Maldives                 |
-| `north-shore-oahu`        | North Shore Oahu (Haleiwa/Pupukea)       | Etats-Unis (Hawaii)      |
-| `pantin`                  | Pantin (Galice)                          | Espagne                  |
-| `pavones`                 | Pavones                                  | Costa Rica               |
-| `pichilemu`               | Pichilemu                                | Chili                    |
-| `pohnpei`                 | Pohnpei                                  | Micronesie               |
-| `popoyo`                  | Popoyo / Tola                            | Nicaragua                |
-| `puerto-escondido`        | Puerto Escondido                         | Mexique                  |
-| `puerto-viejo`            | Puerto Viejo de Talamanca                | Costa Rica               |
-| `punaauia`                | Punaauia (Tahiti ouest)                  | Polynesie francaise (FR) |
-| `putzu-idu`               | Putzu Idu / Capo Mannu (Sardaigne)       | Italie                   |
-| `rapa-nui`                | Hanga Roa (Ile de Paques)                | Chili                    |
-| `safi`                    | Safi                                     | Maroc                    |
-| `saint-leu`               | Saint-Leu                                | La Reunion (FR)          |
-| `sal`                     | Santa Maria (Sal)                        | Cap-Vert                 |
-| `san-clemente`            | San Clemente                             | Etats-Unis               |
-| `san-cristobal-galapagos` | San Cristobal (Galapagos)                | Equateur                 |
-| `san-diego`               | San Diego (La Jolla)                     | Etats-Unis               |
-| `santa-barbara`           | Santa Barbara / Carpinteria              | Etats-Unis               |
-| `santa-catalina-pa`       | Santa Catalina                           | Panama                   |
-| `santa-rosa-cr`           | Parc Santa Rosa (Guanacaste)             | Costa Rica               |
-| `sumba-ouest`             | Sumba ouest                              | Indonesie                |
-| `tamarin`                 | Tamarin                                  | Ile Maurice              |
-| `tavarua`                 | Tavarua / Namotu                         | Fidji                    |
-| `teahupoo`                | Teahupo'o (presqu'ile de Tahiti)         | Polynesie francaise (FR) |
-| `thurso`                  | Thurso (Ecosse)                          | Royaume-Uni              |
-| `tofo`                    | Tofo                                     | Mozambique               |
-| `unstad`                  | Unstad (Lofoten)                         | Norvege                  |
-| `walvis-bay`              | Walvis Bay / Skeleton Bay                | Namibie                  |
+| zone_id | Zone | Pays |
+| --- | --- | --- |
+| `pavones` | Pavones | Costa Rica |

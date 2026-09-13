@@ -2,6 +2,7 @@ import Image from "next/image";
 import { SearchBar } from "@/components/search/SearchBar";
 import { Icon } from "@/components/ui/Icon";
 import { DestinationImage } from "@/components/destination/DestinationImage";
+import { DestinationPhotoCredit } from "@/components/destination/DestinationPhotoCredit";
 import type { Destination } from "@/lib/types";
 
 export function Hero({
@@ -97,6 +98,9 @@ export function Hero({
               <span className="postcard-coordinates">
                 {postcard.coordinates}
               </span>
+              {postcard.image && (
+                <DestinationPhotoCredit path={postcard.heroImagePath} />
+              )}
             </div>
           )}
           <svg

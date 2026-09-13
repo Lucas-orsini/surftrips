@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { DESTINATION_PHOTO_CREDITS } from "@/lib/images/credits";
+import { DestinationPhotoCredit } from "@/components/destination/DestinationPhotoCredit";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -58,12 +60,17 @@ export default function LegalPage() {
       </p>
       <h2>Photographies et cartographie</h2>
       <p>
-        Les photographies sont issues d’Unsplash. Les références des visuels et
-        de la carte sont conservées dans le fichier ASSETS.md du projet. Les
-        visuels d’ambiance illustrent le surf et le voyage ; seules les
-        photographies explicitement localisées représentent une destination
-        précise.
+        Les photographies sont issues d’Unsplash, de Pexels et de Wikimedia
+        Commons, selon la licence de chaque fichier. Les références des visuels
+        et de la carte sont conservées dans ASSETS.md et
+        docs/destination-image-sources.md du projet. Les visuels d’ambiance
+        illustrent le surf et le voyage ; seules les photographies explicitement
+        localisées représentent une destination précise.
       </p>
+      <h3>Photographies sous licence Creative Commons avec attribution</h3>
+      {Object.keys(DESTINATION_PHOTO_CREDITS).map((path) => (
+        <DestinationPhotoCredit key={path} path={path} />
+      ))}
     </main>
   );
 }

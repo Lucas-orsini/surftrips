@@ -1945,6 +1945,17 @@ h2 {
 .detail-photo img {
   object-fit: cover;
 }
+.destination-photo-credit {
+  margin: 10px 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.destination-photo-credit a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .destination-visual,
 .destination-image-fallback,
 .destination-contours {

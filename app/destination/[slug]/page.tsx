@@ -16,6 +16,7 @@ import {
 import { FlightSection } from "@/components/travel/FlightSection";
 import { DestinationHero } from "@/components/destination/DestinationHero";
 import { DestinationImage } from "@/components/destination/DestinationImage";
+import { DestinationPhotoCredit } from "@/components/destination/DestinationPhotoCredit";
 import {
   AccommodationSection,
   AccommodationSkeleton,
@@ -86,6 +87,7 @@ export default async function DestinationPage({ params, searchParams }: Props) {
           {criteria ? "Revenir aux résultats" : "Toutes les destinations"}
         </Link>
         <DestinationHero destination={d} />
+        {d.image && <DestinationPhotoCredit path={d.heroImagePath} />}
         <div id="surf" className="detail-grid">
           <div>
             <p className="eyebrow">01 — SURFER</p>
@@ -268,6 +270,14 @@ export default async function DestinationPage({ params, searchParams }: Props) {
                 </Link>
               ))}
             </div>
+            {related
+              .filter((other) => other.image)
+              .map((other) => (
+                <DestinationPhotoCredit
+                  key={other.zoneId}
+                  path={other.heroImagePath}
+                />
+              ))}
           </section>
         )}
       </div>

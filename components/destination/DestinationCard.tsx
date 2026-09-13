@@ -5,6 +5,7 @@ import { SEASON_CLASS, SEASON_LABELS } from "@/lib/surf/season";
 import { Icon } from "@/components/ui/Icon";
 import { SeasonTimeline } from "./SeasonTimeline";
 import { DestinationImage } from "./DestinationImage";
+import { DestinationPhotoCredit } from "./DestinationPhotoCredit";
 export function DestinationCard({
   destination: d,
   index = 0,
@@ -43,6 +44,7 @@ export function DestinationCard({
           </span>
         </div>
       </Link>
+      {d.image && <DestinationPhotoCredit path={d.heroImagePath} />}
       <div className="destination-title-row">
         <div>
           <p className="country-label">{d.country}</p>
