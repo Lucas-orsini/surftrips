@@ -26,9 +26,6 @@ test.beforeEach(async ({ page }, info) => {
     "x-real-ip": `198.51.100.${120 + info.workerIndex}`,
   });
   // No image or database mocks; booking scripts are unrelated to this publication.
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
   await page.route("https://tpemd.com/**", (route) => route.abort());
 });
 

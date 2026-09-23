@@ -1,8 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
-import {
-  HOTELS_WIDGET_SCRIPT,
-  HOTELS_WIDGET_ATTRIBUTES,
-} from "../../lib/accommodation/widget";
+import { test, expect } from "@playwright/test";
 
 function searchParams() {
   const day = new Date();
@@ -19,170 +15,114 @@ function searchParams() {
   });
 }
 
-async function simulateWidget(page: Page) {
-  const calls: string[] = [];
-  await page.route(HOTELS_WIDGET_SCRIPT, (route) => {
-    calls.push(route.request().url());
-    return route.fulfill({
-      contentType: "text/javascript",
-      body: `window.addEventListener('DOMContentLoaded',()=>{ const root=document.querySelector('.eg-widget'); const form=document.createElement('form'); form.style.height='400px'; const label=document.createElement('label'); label.textContent='Destination Hotels.com'; const input=document.createElement('input'); label.append(input); form.append(label); root.append(form); });`,
-    });
-  });
-  await page.route("https://tpemd.com/**", (route) => route.abort());
-  return calls;
-}
-
-async function expectWidget(page: Page, zoneId: string) {
-  await page.locator(".hotels-widget").scrollIntoViewIfNeeded();
-  await expect(page.locator(".hotels-widget")).toHaveAttribute(
-    "data-state",
-    "ready",
-    { timeout: 12000 },
-  );
-  const widgetDocument = page.frameLocator(".hotels-widget-frame");
-  await expect(widgetDocument.locator(".eg-widget")).toHaveCount(1);
-  await expect(widgetDocument.locator("script.eg-widgets-script")).toHaveCount(
-    1,
-  );
-  for (const [key, value] of Object.entries(HOTELS_WIDGET_ATTRIBUTES))
-    await expect(widgetDocument.locator(".eg-widget")).toHaveAttribute(
-      key,
-      value,
-    );
-  await expect(widgetDocument.locator(".eg-widget")).toHaveAttribute(
-    "data-pubref",
-    `surftrips-${zoneId}`,
-  );
-  for (const key of ["data-destination", "data-checkin", "data-checkout"])
-    await expect(widgetDocument.locator(".eg-widget")).not.toHaveAttribute(key);
-  expect(
-    await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth <=
-        document.documentElement.clientWidth,
-    ),
-  ).toBe(true);
-}
-
-test("fiche directe sans recommandation : contenu serveur, ordre du parcours, chargement différé", async ({
+test("Booking : fiche directe, contenu serveur, ordre surf → vol → logement, aucun Expedia", async ({
   page,
   request,
 }) => {
-  const calls = await simulateWidget(page);
+  const expedia: string[] = [];
+  page.on("request", (req) => {
+    if (/expedia|hotels\.com|hotels-widget/i.test(req.url()))
+      expedia.push(req.url());
+  });
   const response = await request.get("/destination/ericeira");
-  const html = await response.text();
-  expect(html).toContain("Où dormir à");
-  expect(html).not.toContain(HOTELS_WIDGET_SCRIPT);
+  expect(await response.text()).not.toMatch(
+    /Hotels\.com|eg-widgets\.js|data-pubref|BOOKING_CJ_EVERGREEN_URL/,
+  );
   await page.goto("/destination/ericeira");
-  await expect(page.locator("#hebergement")).toBeVisible();
-  await expect(page.locator("#hebergement")).toContainText(
-    "Trouve ton logement à Ericeira",
-  );
-  await expect(page.locator(".accommodation-card")).toHaveCount(0);
-  await expect(page.locator("#hebergement")).not.toContainText(
-    "Aucun hôtel disponible",
-  );
-  expect(calls).toHaveLength(0);
-  expect(
-    await page
-      .locator("#surf")
-      .evaluate(
-        (el) =>
-          !!(
-            el.compareDocumentPosition(
-              document.getElementById("reservation")!,
-            ) & Node.DOCUMENT_POSITION_FOLLOWING
-          ),
-      ),
-  ).toBe(true);
-  expect(
-    await page
-      .locator("#reservation")
-      .evaluate(
-        (el) =>
-          !!(
-            el.compareDocumentPosition(
-              document.getElementById("hebergement")!,
-            ) & Node.DOCUMENT_POSITION_FOLLOWING
-          ),
-      ),
-  ).toBe(true);
-  await expectWidget(page, "ericeira");
-  expect(calls).toHaveLength(1);
+  await expect(page.locator("#hebergement")).toContainText("Ericeira");
+  await expect(
+    page.locator("#hebergement iframe, #hebergement script"),
+  ).toHaveCount(0);
+  for (const [before, after] of [
+    ["surf", "reservation"],
+    ["reservation", "hebergement"],
+  ]) {
+    expect(
+      await page
+        .locator(`#${before}`)
+        .evaluate(
+          (el, next) =>
+            Boolean(
+              el.compareDocumentPosition(document.getElementById(next)!) &
+              Node.DOCUMENT_POSITION_FOLLOWING,
+            ),
+          after,
+        ),
+    ).toBe(true);
+  }
+  await page.locator("#hebergement").scrollIntoViewIfNeeded();
+  expect(expedia).toEqual([]);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     "https://surftrips.fr/destination/ericeira",
   );
 });
 
-test("navigation résultats → destination → autre destination : une instance et le bon Pubref", async ({
+test("Booking : navigation résultats → destination → autre destination, dates et vol conservés", async ({
   page,
 }) => {
-  const calls = await simulateWidget(page);
-  await page.goto("/");
-  expect(calls).toHaveLength(0);
+  await page.route("https://tpemd.com/**", (route) => route.abort());
   await page.goto(`/search?${searchParams()}`);
   await expect(page.locator(".destination-card")).not.toHaveCount(0);
-  expect(calls).toHaveLength(0);
   await page
     .locator('.destination-title-row a[href*="/destination/ericeira?"]')
     .click();
-  await expectWidget(page, "ericeira");
-  await expect(page.locator(".hotels-trip")).toContainText("Ton voyage");
+  await expect(page.locator(".accommodation-trip")).toContainText("Ton voyage");
   await expect(page.locator(".booking-route")).toContainText("PAR");
   await expect(page.locator(".booking-route")).toContainText("LIS");
-  const flight = await page.locator("#reservation").boundingBox();
-  const route = await page.locator(".booking-route").boundingBox();
-  expect(route!.y).toBeGreaterThan(flight!.y);
-  expect(route!.y + route!.height).toBeLessThan(flight!.y + flight!.height);
-  expect(calls).toHaveLength(1);
+  await expect(page.locator("#hebergement")).not.toContainText("Hotels.com");
   await page.getByRole("link", { name: "Revenir aux résultats" }).click();
-  const other = page
-    .locator('.destination-title-row a:not([href*="/destination/ericeira?"])')
-    .first();
-  const href = (await other.getAttribute("href"))!;
-  const zoneId = new URL(href, page.url()).pathname.split("/").pop()!;
-  await other.click();
-  await expectWidget(page, zoneId);
-  await expect(page.locator(".hotels-widget-frame")).toHaveCount(1);
-  expect(calls).toHaveLength(2);
-});
-
-test("blocage Expedia : erreur lisible, nouvelle tentative et fiche utilisable", async ({
-  page,
-}) => {
-  await page.route(HOTELS_WIDGET_SCRIPT, (route) => route.abort());
-  await page.goto("/destination/ericeira");
-  await page.locator(".hotels-widget").scrollIntoViewIfNeeded();
-  await expect(page.locator(".hotels-widget")).toHaveAttribute(
-    "data-state",
-    "fallback",
-    { timeout: 12000 },
-  );
-  await expect(page.locator("#hebergement")).toContainText(
-    "Hotels.com n’a pas pu être chargé.",
-  );
-  await expect(page.locator(".spot-detail")).not.toHaveCount(0);
-  await expect(page.locator("#reservation form")).toBeVisible();
-  await simulateWidget(page);
   await page
-    .getByRole("button", { name: "Réessayer le module Hotels.com" })
+    .locator('.destination-title-row a:not([href*="/destination/ericeira?"])')
+    .first()
     .click();
-  await expectWidget(page, "ericeira");
+  await expect(page.locator("#hebergement")).toBeVisible();
+  await expect(page.locator(".accommodation-trip")).toContainText("Ton voyage");
+  await expect(page.locator("#hebergement iframe")).toHaveCount(0);
 });
 
-test("document du widget : entrée validée et exclusion SEO", async ({
+test("Booking : routes sans URL arbitraire, erreur lisible et document Expedia retiré", async ({
   request,
 }) => {
-  const response = await request.get(
-    "/widgets/hotels?pubref=surftrips-ericeira",
-  );
-  expect(response.status()).toBe(200);
-  expect(response.headers()["x-robots-tag"]).toBe("noindex, nofollow");
-  for (const query of [
-    "",
-    "?pubref=surftrips-ericeira&pubref=surftrips-taghazout",
-    "?pubref=%3Cscript%3E",
-  ])
-    expect((await request.get(`/widgets/hotels${query}`)).status()).toBe(400);
+  for (const path of [
+    "/go/booking/accommodation/not-a-uuid?url=https://evil.example&sid=private",
+    "/go/booking/destination/not-a-zone?url=https://evil.example&sid=private",
+  ]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect([400, 404]).toContain(response.status());
+    expect(response.headers().location).toBeUndefined();
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    expect(response.headers()["x-robots-tag"]).toBe("noindex, nofollow");
+    expect(await response.text()).not.toMatch(
+      /SELECT|postgres|stack|evil\.example/,
+    );
+  }
+  expect(
+    (await request.get("/widgets/hotels?pubref=surftrips-ericeira")).status(),
+  ).toBe(404);
+  expect((await request.get("/hotels-widget-bridge.js")).status()).toBe(404);
+});
+
+test("Booking : section responsive à 1440, 1280, 768 et 390 px", async ({
+  page,
+}, info) => {
+  await page.goto("/destination/ericeira");
+  for (const width of [1440, 1280, 768, 390]) {
+    await page.setViewportSize({ width, height: 950 });
+    await page.locator("#hebergement").scrollIntoViewIfNeeded();
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+    await expect(page.locator("#hebergement")).toBeVisible();
+    if (width === 1440 || width === 390)
+      await page
+        .locator("#hebergement")
+        .screenshot({
+          path: `test-results/booking-${info.project.name}-${width}.png`,
+        });
+  }
 });

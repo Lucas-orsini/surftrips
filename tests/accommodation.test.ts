@@ -6,19 +6,13 @@ import {
   type AccommodationRow,
 } from "../lib/accommodation/validation.ts";
 import {
-  hotelsPubref,
-  isHotelsPubref,
-  HOTELS_WIDGET_ATTRIBUTES,
-  HOTELS_WIDGET_SCRIPT,
-} from "../lib/accommodation/widget.ts";
-import {
   ACCOMMODATION_TYPES,
   PRICE_CATEGORIES,
 } from "../lib/accommodation/types.ts";
 
 // Technical fixtures only: no property identity, price, image or tracking invented.
 const row: AccommodationRow = {
-  id: "test-row",
+  id: "00000000-0000-4000-8000-000000000001",
   zone_id: "ericeira",
   name: "Recommandation éditoriale (test)",
   slug: "test",
@@ -28,14 +22,14 @@ const row: AccommodationRow = {
   image_url: null,
   distance_label: null,
   price_category: null,
-  affiliate_url:
-    "https://example.com/manually-supplied?value=a%26b&ref=unchanged",
+  booking_url:
+    "https://www.booking.com/hotel/pt/fixture.html?value=a%26b&ref=unchanged",
   featured: true,
   display_order: 2,
 };
 
 test("liens fournis conservés exactement, protocoles dangereux rejetés", () => {
-  assert.equal(suppliedHttpsUrl(row.affiliate_url), row.affiliate_url);
+  assert.equal(suppliedHttpsUrl(row.booking_url), row.booking_url);
   for (const url of [
     undefined,
     "",
@@ -52,7 +46,7 @@ test("liens fournis conservés exactement, protocoles dangereux rejetés", () =>
 
 test("recommandation sans champs facultatifs : aucune information inventée", () => {
   const item = adaptAccommodation(row)!;
-  assert.equal(item.affiliateUrl, row.affiliate_url);
+  assert.equal(item.bookingUrl, row.booking_url);
   assert.equal(item.zoneId, row.zone_id);
   for (const field of [
     "description",
@@ -69,8 +63,9 @@ test("recommandation sans champs facultatifs : aucune information inventée", ()
 
 test("lien invalide et catégorie inconnue isolés", () => {
   assert.equal(
-    adaptAccommodation({ ...row, affiliate_url: "javascript:alert(1)" }),
-    null,
+    adaptAccommodation({ ...row, booking_url: "javascript:alert(1)" })
+      ?.bookingUrl,
+    undefined,
   );
   assert.equal(adaptAccommodation({ ...row, type: "unknown" }), null);
   assert.equal(adaptAccommodation({ ...row, type: "__proto__" }), null);
@@ -97,29 +92,9 @@ test("six types éditoriaux et trois gammes générales seulement", () => {
   assert.deepEqual(Object.keys(PRICE_CATEGORIES), ["budget", "mid", "premium"]);
 });
 
-test("widget officiel : affiliation inchangée, aucun préremplissage inventé", () => {
-  assert.deepEqual(HOTELS_WIDGET_ATTRIBUTES, {
-    "data-widget": "search",
-    "data-program": "fr-hcom",
-    "data-lobs": "stays",
-    "data-network": "pz",
-    "data-camref": "1011l5QTXG",
-  });
-  assert.equal(
-    HOTELS_WIDGET_SCRIPT,
-    "https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js",
-  );
-  assert.equal(hotelsPubref("ericeira"), "surftrips-ericeira");
-  assert.equal(hotelsPubref("ericeira"), hotelsPubref("ericeira"));
-  assert.notEqual(hotelsPubref("ericeira"), hotelsPubref("taghazout"));
-  for (const id of [
-    "",
-    "../../",
-    "ericeira?email=user@example.com",
-    "<script>",
-    "a".repeat(161),
-  ])
-    assert.throws(() => hotelsPubref(id));
-  assert.equal(isHotelsPubref("surftrips-ericeira"), true);
-  assert.equal(isHotelsPubref("surftrips-ericeira&secret=test"), false);
+test("adresse éditoriale conservée sans URL Booking, sans reprendre un ancien lien affilié", () => {
+  const item = adaptAccommodation({ ...row, booking_url: null });
+  assert.equal(item?.name, row.name);
+  assert.equal(item?.bookingUrl, undefined);
+  assert.equal(Object.hasOwn(item!, "affiliateUrl"), false);
 });

@@ -3,8 +3,13 @@ import {
   PRICE_CATEGORIES,
   type Accommodation,
 } from "./types.ts";
+import {
+  bookingDestinationUrl,
+  isAccommodationId,
+  isZoneId,
+} from "../booking/urls.ts";
 
-/** Validate supplied links; never generate or modify Expedia tracking. */
+/** Validate supplied editorial image URLs without an arbitrary image proxy. */
 export function suppliedHttpsUrl(value: unknown): string | undefined {
   if (
     typeof value !== "string" ||
@@ -33,7 +38,7 @@ export interface AccommodationRow {
   image_url: string | null;
   distance_label: string | null;
   price_category: string | null;
-  affiliate_url: string;
+  booking_url: string | null;
   featured: boolean;
   display_order: number;
 }
@@ -41,9 +46,9 @@ export interface AccommodationRow {
 export function adaptAccommodation(
   row: AccommodationRow,
 ): Accommodation | null {
-  const affiliateUrl = suppliedHttpsUrl(row.affiliate_url);
   if (
-    !affiliateUrl ||
+    !isAccommodationId(row.id) ||
+    !isZoneId(row.zone_id) ||
     !row.name?.trim() ||
     !Object.hasOwn(ACCOMMODATION_TYPES, row.type)
   )
@@ -62,7 +67,7 @@ export function adaptAccommodation(
       row.price_category && Object.hasOwn(PRICE_CATEGORIES, row.price_category)
         ? (row.price_category as Accommodation["priceCategory"])
         : undefined,
-    affiliateUrl,
+    bookingUrl: bookingDestinationUrl(row.booking_url),
     featured: row.featured,
     displayOrder: row.display_order,
   };

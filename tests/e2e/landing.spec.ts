@@ -1,13 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test.beforeEach(async ({ page }) => {
-  // This suite verifies surf and flights; accommodation tests cover Expedia.
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
-});
-
 test("landing : images, sémantique, accessibilité et absence de débordement", async ({
   page,
 }, testInfo) => {

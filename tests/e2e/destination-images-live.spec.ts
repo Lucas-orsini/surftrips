@@ -8,9 +8,6 @@ test.beforeEach(async ({ page }, info) => {
   await page.setExtraHTTPHeaders({
     "x-real-ip": `198.51.100.${70 + info.workerIndex}`,
   });
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
   await page.route("https://tpemd.com/**", (route) => route.abort());
 });
 

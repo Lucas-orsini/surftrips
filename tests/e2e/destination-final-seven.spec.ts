@@ -10,9 +10,6 @@ test.beforeEach(async ({ page }, info) => {
     "x-real-ip": `198.51.100.${190 + info.workerIndex}`,
   });
   await page.route("https://tpemd.com/**", (route) => route.abort());
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
 });
 
 async function imageReady(

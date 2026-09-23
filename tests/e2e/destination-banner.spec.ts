@@ -8,9 +8,6 @@ test("bannière : quatre largeurs, informations visibles, CLS et fallback identi
     "Quatre largeurs explicitement vérifiées dans ce test.",
   );
   test.setTimeout(90_000);
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
   await page.route("https://tpemd.com/**", (route) => route.abort());
   await page.addInitScript(() => {
     Object.assign(window, { bannerCLS: 0, bannerShifts: [] });

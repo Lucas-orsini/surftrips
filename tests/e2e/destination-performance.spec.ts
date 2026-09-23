@@ -3,9 +3,6 @@ import { test } from "@playwright/test";
 test("mesure locale destination : LCP, CLS et latence des interactions", async ({
   page,
 }, info) => {
-  await page.route("https://creator.expediagroup.com/**", (route) =>
-    route.abort(),
-  );
   await page.route("https://tpemd.com/**", (route) => route.abort());
   await page.addInitScript(() => {
     const metrics = { lcp: 0, cls: 0, interactionMax: 0 };

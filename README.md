@@ -65,11 +65,11 @@ Diagnostic reproduit le 10 septembre 2026 : Genève → Melbourne, 10–20 août
 
 L’iframe isole le DOM du partenaire de React. `allow-same-origin` est nécessaire au stockage utilisé par le script réel : cette isolation est fonctionnelle et ne constitue pas une frontière de sécurité entre origines. Les états React restent des frères de l’iframe. Les marqueurs d’affiliation sont publics ; les secrets PostgreSQL et les tokens de services ne lui sont jamais transmis.
 
-## Hébergement et Hotels.com
+## Hébergement et Booking.com / CJ
 
-La section **Où dormir** des fiches destinations associe jusqu’à trois recommandations éditoriales Supabase au widget officiel Hotels.com. Elle apparaît juste après le vol, dans le DOM comme à l’écran : surf → vol → logement. Le widget fonctionne aussi sans recommandations, sans date préremplie ni données Hotels.com extraites. Son chargement est différé à l’approche de la section, avec une instance isolée par destination, le Pubref `surftrips-[zoneId]` et un secours en cas de blocage.
+La section **Où dormir**, après le vol, conserve jusqu’à trois recommandations éditoriales Supabase. Les CTA passent par les routes serveur `/go/booking/accommodation/[id]` et `/go/booking/destination/[zoneId]` : URL Booking normale en base, tracking Evergreen CJ construit au clic, SID limité à la zone et à la source. Aucun script Expedia, scraping, prix live ou préremplissage de dates inventé.
 
-La migration [20260912_accommodations.sql](migrations/20260912_accommodations.sql) reste à appliquer manuellement ; aucun hébergement n’a été ajouté. Les fiches, photos autorisées et liens affiliés exacts doivent être saisis par l’administrateur. `HOTELS_COM_FALLBACK_URL` peut recevoir un lien affilié général fourni par Creator Toolbox ; elle reste facultative et aucun lien n’est inventé si elle est vide. Voir [le guide hébergement](docs/accommodation.md) pour le schéma, la saisie éditoriale, les droits et les tests.
+Configurer `BOOKING_CJ_EVERGREEN_URL` côté serveur uniquement. L’inspection du 23 septembre 2026 confirme que la table de logements n’a pas encore été créée : appliquer manuellement [20260912_accommodations.sql](migrations/20260912_accommodations.sql), puis [20260923_booking_cj.sql](migrations/20260923_booking_cj.sql). Renseigner des `booking_url` de fiches exactes et des `zones.booking_destination_url` validées. Les anciens liens ne sont ni supprimés ni convertis. Les CTA sans configuration valide sont masqués ; les adresses éditoriales restent affichables. Voir [le guide hébergement](docs/accommodation.md) pour la configuration, la sécurité, le test CJ réel et les données restant à saisir.
 
 ## Limitation des recherches et déploiement
 

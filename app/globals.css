@@ -3621,7 +3621,7 @@ h2 {
 .accommodation-card .text-link:focus-visible svg {
   transform: translateX(3px);
 }
-.hotels-search-panel {
+.accommodation-search-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 575px);
   gap: 40px;
@@ -3631,72 +3631,48 @@ h2 {
   padding: 36px;
   margin-top: 36px;
 }
-.hotels-search-copy h3 {
+.accommodation-search-copy h3 {
   font-size: clamp(26px, 3vw, 36px);
   letter-spacing: -1px;
   line-height: 1.2;
   margin: 14px 0 20px;
 }
-.hotels-search-copy > .eyebrow {
+.accommodation-search-copy > .eyebrow {
   color: var(--deep);
 }
-.hotels-search-copy .body-copy + .body-copy {
+.accommodation-search-copy .body-copy + .body-copy {
   margin-top: 18px;
 }
-.hotels-search-box {
+.accommodation-search-box {
   min-width: 0;
   width: 100%;
   max-width: 575px;
   margin-inline: auto;
 }
-.hotels-destination {
+.accommodation-destination {
   font-size: 14px;
   line-height: 1.7;
 }
-.hotels-destination strong {
+.accommodation-destination strong {
   display: block;
   font-family: var(--font-syne), sans-serif;
   font-size: 19px;
 }
-.hotels-trip {
+.accommodation-trip {
   margin-top: 10px;
   font-size: 13px;
 }
-.hotels-search-hint {
+.accommodation-search-hint {
   font-size: 12px;
   color: var(--muted);
   line-height: 1.7;
   margin: 12px 0 20px;
 }
-.hotels-widget {
-  width: 100%;
-  max-width: 575px;
-  min-width: 0;
-}
-.hotels-widget-frame {
-  width: 100%;
-  max-width: 575px;
-  border: 0;
-}
-.hotels-widget-fallback {
-  padding: 24px 0;
-  font-size: 14px;
-  line-height: 1.7;
-}
-.hotels-widget-fallback .text-link {
-  margin-top: 16px;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-}
-.hotels-fallback-link {
-  margin-top: 18px;
-}
 @media (max-width: 1100px) {
-  .hotels-search-panel {
+  .accommodation-search-panel {
     grid-template-columns: 1fr;
   }
-  .hotels-search-copy {
+  .accommodation-search-copy {
     max-width: 650px;
   }
 }
@@ -3712,19 +3688,17 @@ h2 {
   .accommodation-section {
     margin-block: 52px;
   }
-  .hotels-search-panel {
+  .accommodation-search-panel {
     padding: 22px 0;
     gap: 24px;
   }
-  .hotels-search-copy {
+  .accommodation-search-copy {
     padding-inline: 16px;
   }
-  .hotels-destination,
-  .hotels-trip,
-  .hotels-search-hint,
-  .hotels-widget > .booking-status,
-  .hotels-widget-fallback,
-  .hotels-fallback-link {
+  .accommodation-destination,
+  .accommodation-trip,
+  .accommodation-search-hint,
+  .accommodation-search-box > .text-link {
     margin-inline: 12px;
   }
 }
@@ -3735,7 +3709,7 @@ h2 {
   }
 }
 @media (max-width: 420px) {
-  .hotels-search-panel {
+  .accommodation-search-panel {
     margin-inline: -10px;
   }
 }

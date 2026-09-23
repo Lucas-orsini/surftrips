@@ -8,8 +8,10 @@ import {
 
 export function AccommodationCard({
   accommodation: a,
+  bookingEnabled,
 }: {
   accommodation: Accommodation;
+  bookingEnabled: boolean;
 }) {
   const price = a.priceCategory ? PRICE_CATEGORIES[a.priceCategory] : undefined;
   return (
@@ -47,16 +49,18 @@ export function AccommodationCard({
             <span>Gamme indicative, hors tarif actuel</span>
           </p>
         )}
-        <a
-          href={a.affiliateUrl}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-          className="text-link"
-        >
-          Voir sur Hotels.com
-          <Icon name="arrow" size={18} />
-          <span className="sr-only"> — {a.name}, nouvel onglet</span>
-        </a>
+        {bookingEnabled && a.bookingUrl && (
+          <a
+            href={`/go/booking/accommodation/${encodeURIComponent(a.id)}`}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            className="text-link"
+          >
+            Voir sur Booking.com
+            <Icon name="arrow" size={18} />
+            <span className="sr-only"> — {a.name}, nouvel onglet</span>
+          </a>
+        )}
       </div>
     </article>
   );

@@ -19,7 +19,6 @@ const expectedColumns = [
   "image_url",
   "distance_label",
   "price_category",
-  "affiliate_url",
   "featured",
   "display_order",
   "active",
@@ -48,7 +47,7 @@ const accommodationSchema = unstable_cache(
     }
     return "ready" as const;
   },
-  ["accommodation-schema-v1"],
+  ["accommodation-schema-v2-booking"],
   { revalidate: 60 },
 );
 
@@ -65,8 +64,8 @@ export const getRecommendedAccommodations = cache(
         if (status !== "ready") return { items: [], status };
         const rows = await readQuery<AccommodationRow>(
           `SELECT id,zone_id,name,slug,type,location_label,description,image_url,
-         distance_label,price_category,affiliate_url,featured,display_order
-         FROM public.accommodations WHERE zone_id=$1 AND active=true
+         distance_label,price_category,to_jsonb(a)->>'booking_url' AS booking_url,featured,display_order
+         FROM public.accommodations a WHERE zone_id=$1 AND active=true
          ORDER BY featured DESC,display_order ASC,id ASC LIMIT $2`,
           [zoneId, count],
         );
@@ -87,7 +86,7 @@ export const getRecommendedAccommodations = cache(
         return { items: [], status: "unavailable" };
       }
     },
-    ["recommended-accommodations-v1"],
+    ["recommended-accommodations-v2-booking"],
     { revalidate: 60 },
   ),
 );

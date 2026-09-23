@@ -24,7 +24,7 @@ export interface Accommodation {
   imageUrl?: string;
   distanceLabel?: string;
   priceCategory?: keyof typeof PRICE_CATEGORIES;
-  affiliateUrl: string;
+  bookingUrl?: string;
   featured: boolean;
   displayOrder: number;
 }

@@ -1,84 +1,108 @@
-# Hébergements éditoriaux et Hotels.com
+# Hébergements éditoriaux et Booking.com / CJ
 
-La section `/destination/[zoneId]#hebergement` se situe après les spots et le vol. Son contenu et les cartes sont rendus côté serveur. Expedia ne fournit aucune donnée aux recommandations Surftrips : aucun prix, disponibilité, note, chambre ou photo n’est extrait du widget ou d’Hotels.com.
+La section `/destination/[zoneId]#hebergement` conserve l’ordre **surf → vol → logement** et les cartes Surftrips. Les recommandations sont rendues côté serveur. Booking.com gère la disponibilité, les chambres et la réservation : aucune API de prix, extraction de photos/notes, récupération de données depuis un widget ou conversion automatique d’un lien Hotels.com.
 
-## Schéma et migration
+## État du schéma et migrations manuelles
 
-Inspection en lecture seule le **12 septembre 2026** : `public.zones` et `public.spots` sont les seules tables métier. Aucune table de logements équivalente n’existe ; `zones.zone_id` est une clé de type `text`.
+Inspection PostgreSQL en lecture seule le **23 septembre 2026** : aucune table `public.accommodations` ni table de logements équivalente ; `zones.booking_destination_url` est absent. Le code s’adapte à cet état sans casser les destinations et sans afficher de bouton fictif.
 
-La migration [20260912_accommodations.sql](../migrations/20260912_accommodations.sql) est préparée, **non appliquée automatiquement**. Elle crée uniquement `public.accommodations`, son index et son déclencheur de mise à jour de `updated_at`. Elle ne modifie pas `zones`, `spots` ni leurs politiques. Elle n’insère aucune donnée et échoue si la table existe déjà, afin d’éviter toute adaptation silencieuse d’un schéma différent.
+À appliquer dans cet ordre, après revue par l’administrateur :
 
-Après revue, l’administrateur peut exécuter le fichier dans le SQL Editor Supabase. Aucun script de démarrage, build ou déploiement ne l’exécute. L’application continue à fonctionner avant son application : seul le moteur Hotels.com s’affiche, sans message « aucun hôtel disponible ».
+1. [20260912_accommodations.sql](../migrations/20260912_accommodations.sql), déjà présente : crée la table éditoriale si elle est absente. Ne pas rejouer si elle existe.
+2. [20260923_booking_cj.sql](../migrations/20260923_booking_cj.sql) : ajoute `accommodations.booking_url` et `zones.booking_destination_url`, rend l’ancien `affiliate_url` facultatif et le marque déprécié. Aucune suppression de données, conversion d’URL ou modification de RLS/politiques.
 
-RLS est activée. Aucun droit n’est accordé à `anon` ou `authenticated`. `service_role` reçoit uniquement SELECT ; l’administrateur propriétaire maintient les recommandations. Si `DATABASE_URL` utilise un autre rôle dédié, l’administrateur doit lui donner SELECT et une politique de lecture adaptée. Aucune politique d’écriture publique. Les accès Next.js réutilisent le pool PostgreSQL TLS et les transactions READ ONLY existants.
+Ces migrations ne sont exécutées ni au démarrage, ni au build, ni automatiquement par la tâche. La seconde dépend de la première. Aucune donnée initiale n’est insérée. `affiliate_url` est conservé pour compatibilité mais n’est plus lu ni affiché.
 
-Lecture des recommandations : `zone_id=$1 AND active=true`, puis `featured DESC, display_order ASC, id ASC`, limite paramétrée de 1 à 3, trois par défaut. Cache de 60 secondes, également pour la détection du schéma. Attendre jusqu’à une minute après une modification éditoriale. Les erreurs de connexion ou de schéma restent côté serveur ; la fiche et le widget restent utilisables.
+RLS reste activée sur les hébergements, sans accès public en écriture. Les requêtes réutilisent le pool PostgreSQL serveur avec TLS vérifié et les transactions READ ONLY existantes. Un rôle serveur dédié doit disposer du droit SELECT approprié.
 
-## Données à saisir manuellement
-
-Pour chaque recommandation validée :
-
-- `zone_id` : identifiant d’une zone existante.
-- `name`, `slug`, `type` : nom réel, slug unique pour cette zone et l’un de `hotel`, `hostel`, `surf_house`, `apartment`, `guesthouse`, `surf_camp`.
-- `affiliate_url` : **URL HTTPS complète fournie par Expedia Creator Toolbox**, collée telle quelle. Le code n’ajoute ni Pubref ni paramètre aux liens des établissements.
-- `location_label`, `description` (150 caractères maximum), `distance_label` : uniquement des informations vérifiées par Surftrips.
-- `image_url` : URL HTTPS d’une photo dont Surftrips a les droits. Facultative ; sans photo, la carte reste éditoriale. Aucune image ne sera récupérée depuis Hotels.com. Les photos fournies sont chargées directement par le navigateur, sans ouvrir un proxy Next Image à des hôtes arbitraires.
-- `price_category` : éventuellement `budget`, `mid`, `premium`. Affichage € / €€ / €€€, explicitement présenté comme une gamme indicative, jamais comme un tarif actuel.
-- `featured`, `display_order` : priorité éditoriale. `active` vaut **false** par défaut ; l’activer seulement après vérification de la propriété, des liens, des droits photo et de la pertinence surf.
-
-Les URLs invalides ou à credentials intégrés ne sont pas rendues. Un type inconnu ou un lien principal invalide isole la recommandation, avec son identifiant dans le diagnostic serveur. Les champs facultatifs absents ne sont pas inventés.
-
-## Widget officiel et navigation Next.js
-
-Attributs inchangés : `data-widget="search"`, `data-program="fr-hcom"`, `data-lobs="stays"`, `data-network="pz"`, `data-camref="1011l5QTXG"`. Seul `data-pubref="surftrips-[zoneId]"` varie. Aucune date, adresse IP, identité ou autre donnée sensible n’y est incluse.
-
-Le script officiel public [eg-widgets.js](https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js), inspecté uniquement pour son intégration, attend `DOMContentLoaded` et conserve un état global d’initialisation. `next/script` avec `afterInteractive` / `lazyOnload` s’exécuterait après cet événement et ne réinitialiserait pas les nouvelles destinations.
-
-Pour conserver le cycle de chargement officiel, `HotelsSearchWidget` monte **une iframe vers `/widgets/hotels?pubref=…`** à l’approche du viewport. Ce Route Handler produit un document JSX avec le rendu en flux React compatible Next.js ; ses scripts natifs `defer` s’exécutent avant `DOMContentLoaded`. Chaque nouvelle zone reçoit un document neuf. Le script n’est présent qu’une fois dans ce document et bénéficie du cache navigateur. Aucun chargement global, aucune remise à zéro des variables Expedia, aucun appel à une API privée et aucun événement artificiel sur la page Surftrips.
-
-Le document d’intégration est `noindex, nofollow` et ne peut être intégré que par le même site. La passerelle observe **uniquement la taille de notre conteneur extérieur** et transmet la hauteur au parent, qui vérifie origine, fenêtre source et canal. Elle ne lit ni ne modifie le contenu produit par Expedia. Ce contrôle confirme l’affichage du module, pas une disponibilité hôtelière. React ne gère pas les enfants injectés par Expedia.
-
-La largeur reste limitée à 575 px. Les noms de zone et pays, ainsi que les dates validées du voyage, sont rappelés au-dessus. L’utilisateur renseigne lui-même ces informations dans Hotels.com : aucun attribut de préremplissage non documenté.
-
-## Échec et lien de secours
-
-Un chargement échoué ou silencieux pendant huit secondes affiche un message lisible et permet de réessayer. Les cartes, les spots et le vol continuent à fonctionner.
-
-Configuration optionnelle, exclusivement lue côté serveur :
+## Configuration serveur
 
 ```env
-HOTELS_COM_FALLBACK_URL=
+BOOKING_CJ_EVERGREEN_URL=
 ```
 
-Y coller un **lien affilié général Hotels.com fourni par Creator Toolbox**. Tant qu’il est absent ou invalide, aucun lien de secours n’est inventé. La nouvelle tentative reste proposée. Tous les liens de réservation utilisent `target="_blank"` et `rel="sponsored noopener noreferrer"`. La mention de commission est affichée dans la section.
+Renseigner le **Click URL Evergreen Booking.com** du compte CJ et du PID Surftrips. Aucun domaine CJ d’exemple n’est utilisé par l’application. Ne pas utiliser le générateur de deeplinks CJ générique pour ce programme. La variable est déjà présente localement et n’est jamais exposée dans le HTML de la destination ou dans un bundle client. Le lien de tracking résultant est nécessairement visible lors de la redirection HTTP du clic.
 
-## Validation
+Le helper `lib/booking/buildBookingAffiliateUrl.ts` porte `server-only`. Il ajoute `url` et `sid` via `URLSearchParams`, conserve les paramètres existants de l’Evergreen et remplace un ancien `url`/`sid` sans doublons. La destination est encodée une seule fois. Aucune URL fournie par un visiteur n’est utilisée.
 
-Validation du 12 septembre 2026 : TypeScript, lint et build Next.js réussis ; 27 tests unitaires et 32 tests navigateur validés. Les contrôles d’accessibilité et de largeur ont été relancés après correction du contraste, avec succès. Widget réel testé sur ordinateur et aux largeurs 575, 375 et 320 px. Aucun secret trouvé dans les sources versionnables ou les bundles client, aucun driver PostgreSQL dans ces bundles. Aucun changement appliqué au schéma ni aux données Supabase.
+L’ancienne variable `HOTELS_COM_FALLBACK_URL` peut être retirée de l’environnement : le code ne la lit plus. Aucun widget Booking n’est inventé. Si un widget est souhaité plus tard, fournir d’abord le code officiel CJ.
 
-- Tests unitaires : adaptation sans invention, URLs, champs absents, types, gammes et attributs d’affiliation/Pubref.
-- Navigateur avec Supabase réelle : fiche sans recommandations, navigation depuis `/search` et entre destinations, ordre surf → vol → logement, exclusion SEO du document d’intégration, blocage et nouvelle tentative.
-- Rendu des cartes avec trois fixtures techniques **isolées dans les tests**, sans hôtel réel ou fictif inséré en base ; URLs example.com, aucun prix, photo ou tracking Expedia inventé. Vérification des liens et des dispositions 3 / 2 / 1 colonnes.
-- Widget Expedia réel : contrôle de chargement et de géométrie sur ordinateur et mobile, sans extraction des données du widget.
+## Données éditoriales à renseigner
 
-La vérification de recommandations réelles de bout en bout dans Supabase attend l’application de la migration et les premières données éditoriales validées. Les liens individuels et le lien général ne peuvent être vérifiés auprès d’Hotels.com avant leur fourniture.
+Pour chaque hébergement réel sélectionné :
 
-## Fichiers de cette évolution
+- `zone_id` : identifiant existant ; `name`, `slug`, `type` : identité vérifiée et catégorie éditoriale.
+- `booking_url` : URL Booking.com **normale, non affiliée**, vérifiée sur la fiche exacte. HTTPS, hostname exactement `booking.com` ou `www.booking.com`, sans credentials ni port inhabituel. Les variantes non vérifiées restent refusées.
+- `location_label`, `description` (150 caractères maximum), `distance_label` : uniquement des informations connues de Surftrips.
+- `image_url` : photo facultative avec droits d’utilisation ; jamais récupérée automatiquement sur Booking.com.
+- `price_category` : éventuellement `budget`, `mid`, `premium` ; € / €€ / €€€ signifie une gamme générale Surftrips, explicitement distincte d’un tarif actuel.
+- `featured`, `display_order`, `active` : tri manuel et activation après vérification.
 
-Créés :
+Pour chaque zone, `booking_destination_url` reçoit une page destination Booking.com ou une Search URL réellement vérifiée. Aucune URL n’est déduite du nom de zone. Les paramètres déjà présents sont conservés ; Surftrips n’ajoute aucun paramètre de dates non documenté. Le voyage est rappelé dans l’interface, et l’utilisateur vérifie dates et occupation sur Booking.com.
 
-- `components/accommodation/AccommodationSection.tsx`, `AccommodationCard.tsx`, `HotelsSearchWidget.tsx` : section serveur, cartes éditoriales et cycle de vie du widget.
-- `lib/accommodation/types.ts`, `validation.ts`, `widget.ts`, `config.ts` : types, validation des liens, contrat public Expedia, lien de secours facultatif.
-- `lib/db/accommodations.ts` : lecture PostgreSQL, cache et détection d’un schéma absent ou incomplet.
-- `app/widgets/hotels/route.tsx`, `public/hotels-widget-bridge.js` : document JSX isolé et synchronisation de sa hauteur.
-- `migrations/20260912_accommodations.sql` : migration manuelle, sans données initiales.
-- `tests/accommodation.test.ts`, `tests/e2e/accommodation.spec.ts`, `accommodation-render.spec.ts`, `accommodation-live.spec.ts` : contrôles unitaires, serveur, navigation et widget réel.
-- `docs/accommodation.md` : guide de configuration et de saisie.
+La lecture des recommandations utilise `active=true`, puis `featured DESC, display_order ASC, id ASC`, avec trois cartes maximum (cache 60 s). Une adresse éditoriale sans URL Booking valide reste visible **sans CTA** ; aucun ancien lien Expedia n’est réutilisé. Le CTA général est masqué si la zone n’a pas de lien valide. Sans recommandations et sans URL de destination, une courte présentation indique que les adresses sont en préparation. Sans Evergreen valide, tous les CTA affiliés sont masqués.
 
-Modifiés :
+## Parcours de clic et sécurité
 
-- `app/destination/[slug]/page.tsx`, `app/globals.css` : placement logement après vol, lien d’accès et styles du design existant.
-- `.env.example`, `README.md` : configuration facultative et instructions.
-- `scripts/inspect-database.ts` : inspection des tables et colonnes existantes.
-- `components/ui/Icon.tsx` : source JSX React explicite, pour tester le rendu serveur sans le transformateur de composants Playwright ; aucun changement visuel.
-- `tests/e2e/landing.spec.ts` : isolation du script Expedia, testé dans sa propre suite.
+- Carte : `/go/booking/accommodation/[UUID]` → lecture fraîche de l’hébergement actif → URL Booking validée → CJ, avec `sid=surftrips-[zoneId]-hotel-card`.
+- Destination : `/go/booking/destination/[zoneId]` → lecture fraîche de la zone → URL Booking validée → CJ, avec `sid=surftrips-[zoneId]-all`.
+
+Les routes ne lisent **aucun** `url`, `sid`, date ou autre paramètre de query du visiteur. Elles valident les identifiants avant la base, paramètrent les requêtes et refusent les domaines trompeurs (`booking.com.example.org`, etc.). Le SID ne contient que la zone interne et la source fixe.
+
+Réponses 302 temporaires avec `Cache-Control: private, no-store` et `X-Robots-Tag: noindex, nofollow`. La désactivation d’un hébergement prend effet dès le clic suivant, indépendamment du cache des cartes. Identifiant mal formé : 400 ; lien/hébergement absent ou inactif : 404 ; configuration ou base indisponible : 503. Les erreurs sont génériques et ne révèlent ni SQL, ni stack, ni configuration. `/go/` est exclu dans robots.txt.
+
+Les CTA restent de simples ancres, sans préchargement Next, avec `target="_blank"` et `rel="sponsored noopener noreferrer"`. La mention de commission est affichée à proximité lorsqu’un lien est disponible.
+
+## Retrait Expedia
+
+Supprimés après retrait des imports actifs : `HotelsSearchWidget.tsx`, `app/widgets/hotels/route.tsx`, `public/hotels-widget-bridge.js`, `lib/accommodation/widget.ts`, `lib/accommodation/config.ts` et l’ancien test du widget réel. Les styles du cadre sont conservés sous des noms `accommodation-*` ; les styles exclusivement liés à l’iframe sont retirés. Aucun script Expedia, Pubref ou iframe Hotels.com ne reste dans l’application. Travelpayouts, les bannières, images et règles de recherche restent inchangés.
+
+## Vérification réelle CJ — 23 septembre 2026
+
+Le vrai Evergreen configuré localement a été testé par navigation Chrome, avec un clic vers chaque URL produite par **le helper serveur de l’application** :
+
+- [You and the sea, Ericeira](https://www.booking.com/hotel/pt/you-amp-the-sea.html) : fiche exacte atteinte, HTTP 200 final.
+- [Ericeira — page destination](https://www.booking.com/city/pt/ericeira.fr.html) : page exacte atteinte, HTTP 200 final.
+
+Pour les deux : passage CJ en HTTP 302, arrivée chez Booking.com avec `aid`, `label` et le SID Surftrips attendu dans le tracking ; aucune boucle. Booking.com normalise ensuite l’URL et retire ces paramètres visibles. Ce test vérifie le transport des marqueurs jusqu’au partenaire, pas l’enregistrement d’une commission dans le compte CJ.
+
+Ces deux liens publics ont été retrouvés sur les pages officielles Booking.com. Ils **ne sont pas insérés en base** : l’administrateur doit valider la sélection éditoriale et renseigner les données après migration. Le clic complet depuis une recommandation Supabase réelle via `/go/booking/...` reste donc à revalider après cette saisie. Ne pas confondre cette limite avec les tests automatisés des redirections utilisant des fixtures isolées.
+
+## Tests
+
+- Unitaires : encodage, query existante, SID, HTTPS et hostnames exacts, UUID, hôtel inexistant/inactif/sans URL, destination sans URL, panne générique et lecture fraîche après désactivation.
+- Navigateur : ordre du DOM, navigation depuis les résultats, dates conservées, absence d’Expedia, anciennes URLs 404, routes refusant une URL externe, états éditoriaux sans lien, cards 3/2/1 colonnes et largeurs 1440/1280/768/390 px.
+- Les fixtures de recommandations sont rendues uniquement dans le navigateur de test ; aucune propriété fictive, URL ou tarif n’est ajouté à Supabase.
+
+Commandes : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, puis les suites `tests/e2e/accommodation.spec.ts` et `tests/e2e/accommodation-render.spec.ts` sur le serveur local.
+
+## Résultat technique de cette livraison
+
+- `npm run typecheck` : réussi après régénération des types Next par le build (l’ancien type de route supprimée était encore présent dans `.next`).
+- `npm run lint` : réussi, aucune erreur ni warning ESLint.
+- `npm test` : **47 tests réussis**.
+- `npm run build` : réussi ; les deux routes `/go/booking/...` sont dynamiques et `/widgets/hotels` n’existe plus.
+- Playwright sur le build local : **12 tests réussis**, desktop et mobile ; contrôles aux largeurs 1440, 1280, 768 et 390 px. Cartes testées séparément en trois, deux et une colonne.
+- Scan des 151 fichiers source et des 25 fichiers statiques client du build : aucun secret configuré, nom de variable privée, driver PostgreSQL ou script Expedia trouvé dans les bundles client ; aucune valeur secrète copiée dans le code source.
+- Comparaison avec l’état initial : aucun changement aux composants de vol, helpers voyage, images, bannières, recherche, niveaux, scores ou saisons. Ordre du DOM confirmé par navigateur.
+- Aucun déploiement Vercel et aucune écriture Supabase effectués.
+
+Fichiers créés :
+
+- `lib/booking/buildBookingAffiliateUrl.ts`, `urls.ts`, `redirect.ts`.
+- `lib/db/booking.ts`.
+- `app/go/booking/accommodation/[id]/route.ts`, `app/go/booking/destination/[zoneId]/route.ts`.
+- `components/accommodation/AccommodationContent.tsx`.
+- `migrations/20260923_booking_cj.sql`.
+- `tests/booking.test.ts`.
+
+Fichiers modifiés :
+
+- `components/accommodation/AccommodationSection.tsx`, `AccommodationCard.tsx`.
+- `lib/accommodation/types.ts`, `validation.ts`, `lib/db/accommodations.ts`.
+- `app/globals.css` (cadre logement existant, styles du widget retirés), `app/robots.ts`.
+- `.env.example`, `README.md`, `docs/accommodation.md`.
+- `tests/accommodation.test.ts`, `tests/e2e/accommodation.spec.ts`, `accommodation-render.spec.ts`, `tests/production/playwright.config.ts`.
+- Suppression des anciennes interceptions réseau Expedia dans les tests `landing`, `destination-banner`, `destination-images-live`, `destination-image-completion`, `destination-final-seven` et `destination-performance`. Aucun changement de leur logique produit.
+
+Les six fichiers supprimés sont détaillés dans « Retrait Expedia ». Les captures et contrôles locaux sont dans `test-results/` et `.local/booking-cj/`, ignorés par Git.
