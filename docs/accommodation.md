@@ -4,14 +4,14 @@ La section `/destination/[zoneId]#hebergement` conserve l’ordre **surf → vol
 
 ## État du schéma et migrations manuelles
 
-Inspection PostgreSQL en lecture seule le **23 septembre 2026** : aucune table `public.accommodations` ni table de logements équivalente ; `zones.booking_destination_url` est absent. Le code s’adapte à cet état sans casser les destinations et sans afficher de bouton fictif.
+L’inspection initiale du **23 septembre 2026** ne trouvait aucune table `public.accommodations` ni colonne `zones.booking_destination_url`. Après autorisation explicite, les deux migrations ci-dessous ont été **appliquées le 23 septembre 2026**, dans une seule transaction. La table et les deux champs Booking existent désormais. Le lien de destination Ericeira fourni par l’administrateur est enregistré ; aucun hébergement individuel n’a été ajouté. Voir [le journal d’application](booking-cj-migration-20260923.md).
 
-À appliquer dans cet ordre, après revue par l’administrateur :
+Migrations appliquées dans cet ordre — **ne pas les rejouer** :
 
 1. [20260912_accommodations.sql](../migrations/20260912_accommodations.sql), déjà présente : crée la table éditoriale si elle est absente. Ne pas rejouer si elle existe.
 2. [20260923_booking_cj.sql](../migrations/20260923_booking_cj.sql) : ajoute `accommodations.booking_url` et `zones.booking_destination_url`, rend l’ancien `affiliate_url` facultatif et le marque déprécié. Aucune suppression de données, conversion d’URL ou modification de RLS/politiques.
 
-Ces migrations ne sont exécutées ni au démarrage, ni au build, ni automatiquement par la tâche. La seconde dépend de la première. Aucune donnée initiale n’est insérée. `affiliate_url` est conservé pour compatibilité mais n’est plus lu ni affiché.
+Ces migrations ne sont exécutées ni au démarrage ni au build. Leur application ponctuelle a été autorisée par l’administrateur. La seconde dépend de la première. Aucun hôtel n’est inséré. `affiliate_url` est conservé pour compatibilité mais n’est plus lu ni affiché.
 
 RLS reste activée sur les hébergements, sans accès public en écriture. Les requêtes réutilisent le pool PostgreSQL serveur avec TLS vérifié et les transactions READ ONLY existantes. Un rôle serveur dédié doit disposer du droit SELECT approprié.
 
@@ -66,7 +66,7 @@ Le vrai Evergreen configuré localement a été testé par navigation Chrome, av
 
 Pour les deux : passage CJ en HTTP 302, arrivée chez Booking.com avec `aid`, `label` et le SID Surftrips attendu dans le tracking ; aucune boucle. Booking.com normalise ensuite l’URL et retire ces paramètres visibles. Ce test vérifie le transport des marqueurs jusqu’au partenaire, pas l’enregistrement d’une commission dans le compte CJ.
 
-Ces deux liens publics ont été retrouvés sur les pages officielles Booking.com. Ils **ne sont pas insérés en base** : l’administrateur doit valider la sélection éditoriale et renseigner les données après migration. Le clic complet depuis une recommandation Supabase réelle via `/go/booking/...` reste donc à revalider après cette saisie. Ne pas confondre cette limite avec les tests automatisés des redirections utilisant des fixtures isolées.
+Ces deux liens publics ont été retrouvés sur les pages officielles Booking.com. Ils ne constituent pas des recommandations éditoriales insérées en base. Une recherche Ericeira fournie ensuite par l’administrateur est désormais enregistrée dans `zones.booking_destination_url`, après retrait de son ancien tracking et vérification de sa destination. Le clic depuis une recommandation **individuelle** Supabase reste à vérifier après la saisie d’un véritable hébergement ; la table est encore vide. Le parcours du CTA général est consigné dans [le journal d’application](booking-cj-migration-20260923.md).
 
 ## Tests
 
@@ -85,7 +85,7 @@ Commandes : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, pu
 - Playwright sur le build local : **12 tests réussis**, desktop et mobile ; contrôles aux largeurs 1440, 1280, 768 et 390 px. Cartes testées séparément en trois, deux et une colonne.
 - Scan des 151 fichiers source et des 25 fichiers statiques client du build : aucun secret configuré, nom de variable privée, driver PostgreSQL ou script Expedia trouvé dans les bundles client ; aucune valeur secrète copiée dans le code source.
 - Comparaison avec l’état initial : aucun changement aux composants de vol, helpers voyage, images, bannières, recherche, niveaux, scores ou saisons. Ordre du DOM confirmé par navigateur.
-- Aucun déploiement Vercel et aucune écriture Supabase effectués.
+- Aucun déploiement Vercel. Lors de l’implémentation initiale, aucune écriture Supabase ; les migrations et la première URL destination ont ensuite été appliquées sur autorisation explicite, selon le journal lié ci-dessus.
 
 Fichiers créés :
 
