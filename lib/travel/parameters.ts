@@ -42,12 +42,7 @@ export function buildWidgetUrl(
   }).toString();
   return url.toString();
 }
-export function flightFallbackUrl(flight: FlightParameters): string {
-  validateFlight(flight);
-  return `https://www.kayak.fr/flights/${flight.origin}-${flight.destination}/${flight.departure}/${flight.returnDate}?sort=bestflight_a`;
-}
-// The widget can render a no-offers message and link to Kiwi's homepage,
-// dropping the trip. Keep a separate, complete search using the documented
+// Preserve the complete trip in the widget fallback using the documented
 // Kiwi deep-link contract (different from Specific Route's parameters).
 // https://support.travelpayouts.com/hc/en-us/articles/360010109719
 export function buildKiwiSearchUrl(

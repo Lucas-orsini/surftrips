@@ -95,12 +95,15 @@ for (const width of [1440, 1280, 768, 390]) {
       innerOverflow: false,
       order: "hebergement",
     });
-    await page
-      .getByText("Autres options de réservation", { exact: true })
-      .click();
+    await expect(widget.locator(":scope > *")).toHaveCount(1);
     await expect(
-      page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }),
-    ).toBeVisible();
+      page.locator(
+        "#reservation details, #reservation summary, #reservation a",
+      ),
+    ).toHaveCount(0);
+    await page.locator("#reservation").screenshot({
+      path: `test-results/flight-ready-${width}.png`,
+    });
   });
 }
 
@@ -140,7 +143,7 @@ test("resize : messages étrangers ignorés, hauteur invalide ignorée et bornes
 
 test("bloqueur : skeleton démonté et fallback sans hauteur de widget", async ({
   page,
-}) => {
+}, info) => {
   await page.route("https://tpemd.com/**", (route) => route.abort());
   await page.goto(tripUrl());
   const widget = page.locator(".flight-widget");
@@ -149,8 +152,35 @@ test("bloqueur : skeleton démonté et fallback sans hauteur de widget", async (
   await expect(page.locator(".booking-status")).toHaveCount(0);
   await expect(page.locator(".booking-frame")).toBeHidden();
   await expect(widget).toContainText("Impossible d’afficher les vols ici.");
+  const link = widget.getByRole("link", { name: /Voir les vols disponibles/ });
+  await expect(link).toBeVisible();
+  await expect(widget.getByRole("link")).toHaveCount(1);
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", "sponsored noopener noreferrer");
   await expect(
-    page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }),
-  ).toBeVisible();
+    page.locator("#reservation details, #reservation summary"),
+  ).toHaveCount(0);
+  await expect(widget).not.toContainText(
+    /autres? (options?|solutions?|plateformes?|moyens?)|réservation alternative|comparer ailleurs|KAYAK/i,
+  );
+  const affiliate = new URL((await link.getAttribute("href"))!);
+  expect(affiliate.origin).toBe("https://c111.travelpayouts.com");
+  const search = new URL(affiliate.searchParams.get("custom_url")!);
+  const query = new URL(tripUrl(), "http://localhost").searchParams;
+  expect(search.origin).toBe("https://www.kiwi.com");
+  expect(search.pathname).toBe("/deep");
+  expect(search.searchParams.get("from")).toBe("PAR");
+  expect(search.searchParams.get("to")).toBe("LIS");
+  expect(search.searchParams.get("departure")).toBe(query.get("dateDepart"));
+  expect(search.searchParams.get("return")).toBe(query.get("dateRetour"));
   expect((await widget.boundingBox())!.height).toBeLessThan(240);
+  const gap = await page.evaluate(
+    () =>
+      document.querySelector("#hebergement")!.getBoundingClientRect().top -
+      document.querySelector(".flight-widget")!.getBoundingClientRect().bottom,
+  );
+  expect(gap).toBe(32);
+  await page.locator("#reservation").screenshot({
+    path: `test-results/flight-fallback-${info.project.name}.png`,
+  });
 });

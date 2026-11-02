@@ -1,18 +1,34 @@
 import { test, expect } from "@playwright/test";
-// Live read-only smoke check: no reservation, no payment, no mocked partner response.
+// Live read-only smoke check: real scripts and redirect, no reservation/payment.
 test("Travelpayouts réel : préremplissage du widget et recherche complète Kiwi", async ({
   page,
 }, info) => {
   test.setTimeout(60000);
+  // Isolate this real search from the other browser tests' search quota.
+  await page.setExtraHTTPHeaders({
+    "x-real-ip":
+      info.project.name === "desktop" ? "198.51.100.80" : "198.51.100.81",
+  });
   const day = new Date();
   day.setUTCDate(10);
   day.setUTCMonth(day.getUTCMonth() + 1);
   const departure = day.toISOString().slice(0, 10);
   day.setUTCDate(20);
   const returnDate = day.toISOString().slice(0, 10);
+  const kiwiStatuses: number[] = [];
+  page.on("response", (response) => {
+    if (
+      new URL(response.url()).hostname === "widgets.kiwi.com" &&
+      new URL(response.url()).pathname === "/single"
+    )
+      kiwiStatuses.push(response.status());
+  });
   await page.goto(
-    `/destination/ericeira?origine=PAR&niveau=intermediaire&dateDepart=${departure}&dateRetour=${returnDate}`,
+    `/recherche?origine=PAR&niveau=intermediaire&region=Portugal&dateDepart=${departure}&dateRetour=${returnDate}`,
   );
+  await page
+    .locator('.destination-title-row a[href*="/destination/ericeira?"]')
+    .click();
   const frame = page.frameLocator(".booking-frame");
   const script = frame.locator("script[data-from]");
   await expect(script).toHaveAttribute("data-from", "PAR", { timeout: 15000 });
@@ -55,28 +71,40 @@ test("Travelpayouts réel : préremplissage du widget et recherche complète Kiw
         document.documentElement.clientWidth,
     ),
   ).toBe(true);
-  const options = page.getByText("Autres options de réservation", {
-    exact: true,
+  await expect(
+    page.locator("#reservation details, #reservation summary"),
+  ).toHaveCount(0);
+  const liveState = (await page
+    .locator(".flight-widget")
+    .getAttribute("data-state"))!;
+  info.annotations.push({
+    type: "live-widget-state",
+    description: `${liveState}; Kiwi HTTP ${kiwiStatuses.join(", ")}`,
   });
-  if (await options.isVisible()) await options.click();
+  console.log({ project: info.project.name, liveState, kiwiStatuses });
+  if (liveState === "ready") {
+    await expect(page.locator(".flight-widget > *")).toHaveCount(1);
+    // Exercise the real fallback link even when the live widget succeeds.
+    await page.route("https://tpemd.com/**", (route) => route.abort());
+    await page.reload();
+    await page.locator(".flight-widget").scrollIntoViewIfNeeded();
+    await expect(page.locator(".flight-widget")).toHaveAttribute(
+      "data-state",
+      "fallback",
+    );
+  }
   const searchUrl = new URL(
     (await page
-      .getByRole("link", { name: /Rechercher sur Kiwi.com/ })
+      .getByRole("link", { name: /Voir les vols disponibles/ })
       .getAttribute("href"))!,
   );
   expect(searchUrl.origin).toBe("https://c111.travelpayouts.com");
   expect(searchUrl.searchParams.get("shmarker")).toBe(
     widgetUrl.searchParams.get("shmarker"),
   );
-  info.annotations.push({
-    type: "live-widget-state",
-    description: (await page
-      .locator(".flight-widget")
-      .getAttribute("data-state"))!,
-  });
   const [search] = await Promise.all([
     page.waitForEvent("popup"),
-    page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }).click(),
+    page.getByRole("link", { name: /Voir les vols disponibles/ }).click(),
   ]);
   // Follow the real affiliate redirect, not just the URL we constructed.
   // Inventory and prices change: assert the trip on Kiwi, never a quoted fare.

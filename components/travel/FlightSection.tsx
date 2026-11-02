@@ -102,7 +102,6 @@ export function FlightSection({
           widgetKey={booking.key}
           srcDoc={booking.srcDoc}
           searchUrl={booking.searchUrl}
-          fallbackUrl={booking.fallbackUrl}
         />
       )}
       {!d.airportCode && (

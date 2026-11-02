@@ -2,6 +2,18 @@
 
 Modification locale de l’affichage uniquement. Travelpayouts **Specific Route Widget**, `campaign_id=111`, `promo_id=4484`, conservé. Aucun déploiement Vercel.
 
+## Validation après retrait du bloc de liens
+
+Le widget chargé s’affiche désormais seul. Le bloc dépliable a été retiré du DOM, avec ses trois règles CSS, la prop `fallbackUrl` et le générateur du lien vers le second prestataire. Le fallback conserve un seul bouton **Voir les vols disponibles →**, vers la même recherche affiliée Travelpayouts/Kiwi, ainsi que la mention d’affiliation. Aucun composant ou lien Booking.com n’a changé.
+
+- TypeScript, ESLint, 47 tests unitaires et build Next.js : réussis.
+- 40 scénarios navigateur distincts validés sur desktop/mobile, dont les quatre largeurs 1440/1280/768/390 px ; quatre doublons de ces largeurs sont volontairement ignorés dans le projet mobile. Le premier passage a rencontré un clic de redimensionnement intermittent et deux quotas de recherche partagés ; la reprise ciblée passe (5 tests), avec une IP de test dédiée au parcours Travelpayouts réel.
+- Aucun bloc dépliable, titre isolé, lien supplémentaire ou espace réservé : le widget chargé est le seul enfant de son conteneur. L’écart jusqu’au logement reste **32 px**, widget chargé comme fallback ; aucun débordement horizontal.
+- Navigation depuis la recherche réelle Supabase, widget chargé avec réponses tierces contrôlées, script bloqué/silencieux et iframe vide : vérifiés. Les contrôles Booking existants passent.
+- Contrôle réel **PAR → LIS, 10–20 décembre 2026**, desktop et mobile : scripts officiels, paramètres et affiliation conservés, iframe Kiwi HTTP 200. L’état réel a varié entre `ready` et `fallback` selon le chargement ; le délai de secours de cinq secondes est inchangé. La redirection affiliée réelle ouvre la recherche Kiwi avec Paris, Lisbonne et les deux dates sur les deux formats. Aucune réservation effectuée.
+
+Les mesures et captures ci-dessous documentent la passe antérieure de réduction des espaces. Les captures de la validation actuelle sont dans `test-results/flight-ready-*.png`, `test-results/flight-fallback-*.png` et `test-results/live-travel-*.png`.
+
 ## Mesures et cause du blanc
 
 L’ancien composant commençait à **430 px**, puis appliquait `min(1400, max(300, hauteur + 16))`. Il réservait donc au moins 300 px, même pour un contenu plus petit. L’iframe partenaire était inline, ajoutant également environ 3 px de ligne de base. Le lien de parrainage officiel occupait environ 26 px. Notre `#booking-root` était vide : le script partenaire et son contenu étaient placés à côté.
@@ -27,9 +39,9 @@ Un `ResizeObserver` mesure `Math.ceil(root.getBoundingClientRect().height)` et t
 
 Kiwi continue à dimensionner lui-même son iframe avec son protocole officiel. Aucun accès au DOM cross-origin, suppression d’élément tiers, déplacement négatif ou overlay n’est ajouté. Le `MutationObserver` existant sert seulement à détecter l’insertion du contenu. Les observateurs/timers du document sont nettoyés à sa fermeture ; l’event listener React, son timer et son observateur d’intersection sont retirés au démontage.
 
-Le skeleton est démonté en état `ready` ou `fallback`. Le fallback conserve le délai existant de cinq secondes à l’approche de la section et le traitement des erreurs. L’iframe masquée avec `display:none` ne réserve plus de place ; aucun `visibility:hidden` n’est employé. Le fallback mesuré occupe environ 120 px sur desktop et 203 px sur mobile, textes et liens compris.
+Le skeleton est démonté en état `ready` ou `fallback`. Le fallback conserve le délai existant de cinq secondes à l’approche de la section et le traitement des erreurs. L’iframe masquée avec `display:none` ne réserve plus de place ; aucun `visibility:hidden` n’est employé. Le fallback conserve uniquement le lien de secours Travelpayouts/Kiwi et la mention d’affiliation.
 
-Le formulaire Surftrips est retiré lorsque le voyage est valide et déjà renseigné. Il reste disponible en arrivée directe sans critères, en cas d’erreur et lorsque départ et arrivée sont identiques. Les liens de secours et la mention d’affiliation restent accessibles dans **Autres options de réservation**, au-dessus du widget chargé, et directement dans le fallback. Le logement suit à 32 px de l’iframe : 16 px de padding puis 16 px de marge.
+Le formulaire Surftrips est retiré lorsque le voyage est valide et déjà renseigné. Il reste disponible en arrivée directe sans critères, en cas d’erreur et lorsque départ et arrivée sont identiques. Le widget chargé s’affiche seul, sans bloc dépliable ni liens supplémentaires. En cas d’échec, « Impossible d’afficher les vols ici. » précède le bouton **Voir les vols disponibles →** vers Travelpayouts/Kiwi et la mention d’affiliation. Le bloc dépliable, ses styles et la construction du lien vers l’ancien second prestataire ont été supprimés du code. Le logement suit à 32 px de l’iframe : 16 px de padding puis 16 px de marge.
 
 ## Powered by et choix du widget
 

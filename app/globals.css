@@ -3396,18 +3396,6 @@ h2 {
   width: min(240px, 65%);
   margin: 8px 0;
 }
-.booking-options {
-  margin-bottom: 8px;
-  font-size: 12px;
-  line-height: 1.7;
-}
-.booking-options summary {
-  cursor: pointer;
-  color: var(--muted);
-}
-.booking-options .booking-actions {
-  margin-top: 8px;
-}
 .booking-fallback {
   margin: 0;
   line-height: 1.7;

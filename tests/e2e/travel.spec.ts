@@ -14,7 +14,7 @@ function tripQuery(origin = "PAR") {
   });
 }
 
-test("widget chargé sans offre : la recherche Kiwi complète conserve le voyage", async ({
+test("widget chargé sans offre : seul le widget Kiwi reste dans la section Vol", async ({
   page,
 }) => {
   // Reproduces the actual partner no-offers screen and its homepage link.
@@ -45,24 +45,13 @@ test("widget chargé sans offre : la recherche Kiwi complète conserve le voyage
       .frameLocator("iframe")
       .getByText("Aucun voyage trouvé."),
   ).toBeVisible();
-  const searchLink = page.getByRole("link", {
-    name: /Rechercher sur Kiwi.com/,
-  });
-  await page
-    .getByText("Autres options de réservation", { exact: true })
-    .click();
-  await expect(searchLink).toBeVisible();
-  const href = new URL((await searchLink.getAttribute("href"))!);
-  const search = new URL(href.searchParams.get("custom_url") || href);
-  expect(search.origin).toBe("https://www.kiwi.com");
-  expect(search.pathname).toBe("/deep");
-  expect(search.searchParams.get("from")).toBe("PAR");
-  expect(search.searchParams.get("to")).toBe("LIS");
-  expect(search.searchParams.get("departure")).toBe(query.get("dateDepart"));
-  expect(search.searchParams.get("return")).toBe(query.get("dateRetour"));
+  await expect(page.locator(".flight-widget > *")).toHaveCount(1);
   await expect(
-    page.getByRole("link", { name: /Essayer aussi sur KAYAK/ }),
-  ).toBeVisible();
+    page.locator("#reservation details, #reservation summary, #reservation a"),
+  ).toHaveCount(0);
+  await expect(page.locator("#reservation")).not.toContainText(
+    /autres? (options?|solutions?|plateformes?|moyens?)|réservation alternative|comparer ailleurs|KAYAK/i,
+  );
   expect(
     await page.evaluate(
       () =>

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   buildWidgetUrl,
   buildKiwiSearchUrl,
-  flightFallbackUrl,
   widgetDocument,
   widgetKey,
 } from "../lib/travel/parameters.ts";
@@ -38,7 +37,7 @@ test("Specific Route : paramètres exacts et dates intactes", () => {
   for (const key of ["origin", "destination", "depart_date", "return_date"])
     assert.equal(url.searchParams.has(key), false);
 });
-test("chaque changement de voyage remonte le widget et le fallback garde les dates", () => {
+test("chaque changement de voyage remonte le widget", () => {
   for (const changes of [
     { origin: "GVA" },
     { destination: "AGA" },
@@ -46,7 +45,6 @@ test("chaque changement de voyage remonte le widget et le fallback garde les dat
     { returnDate: "2026-10-21" },
   ])
     assert.notEqual(widgetKey({ ...flight, ...changes }), widgetKey(flight));
-  assert.match(flightFallbackUrl(flight), /PAR-LIS\/2026-10-10\/2026-10-20/);
 });
 test("recherche complète Kiwi : aéroports et dates conservés, même sans widget", () => {
   const url = new URL(buildKiwiSearchUrl(flight));
@@ -95,7 +93,6 @@ test("vols impossibles ou paramètres invalides rejetés par tous les liens", ()
   ]) {
     const trip = { ...flight, ...changes };
     assert.throws(() => buildKiwiSearchUrl(trip));
-    assert.throws(() => flightFallbackUrl(trip));
     assert.throws(() =>
       buildWidgetUrl(trip, { marker: "test", shmarker: "test" }),
     );

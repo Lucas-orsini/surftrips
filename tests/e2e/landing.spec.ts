@@ -178,15 +178,25 @@ test("Supabase réel : Intermédiaire Paris Monde entier → destination → fal
     "fallback",
     { timeout: 12000 },
   );
+  const fallbackLink = page.getByRole("link", {
+    name: /Voir les vols disponibles/,
+  });
+  await expect(fallbackLink).toBeVisible();
+  await expect(page.locator("#reservation a")).toHaveCount(1);
   await expect(
-    page.getByRole("link", { name: /Essayer aussi sur KAYAK/ }),
-  ).toHaveAttribute(
-    "href",
-    new RegExp(`PAR-[A-Z]{3}/${dates.departure}/${dates.returnDate}`),
-  );
+    page.locator("#reservation details, #reservation summary"),
+  ).toHaveCount(0);
+  const affiliate = new URL((await fallbackLink.getAttribute("href"))!);
+  expect(affiliate.origin).toBe("https://c111.travelpayouts.com");
+  const search = new URL(affiliate.searchParams.get("custom_url")!);
+  expect(search.origin).toBe("https://www.kiwi.com");
+  expect(search.searchParams.get("from")).toBe("PAR");
+  expect(search.searchParams.get("departure")).toBe(dates.departure);
+  expect(search.searchParams.get("return")).toBe(dates.returnDate);
   expect(thirdParty.length).toBe(1);
   const url = new URL(thirdParty[0]);
   expect(url.searchParams.get("from_name")).toBe("PAR");
+  expect(search.searchParams.get("to")).toBe(url.searchParams.get("to_name"));
   expect(url.searchParams.get("departure")).toBe(dates.departure);
   expect(url.searchParams.get("return")).toBe(dates.returnDate);
   expect(url.searchParams.has("origin")).toBe(false);
@@ -258,21 +268,12 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   expect(calls.length).toBe(2);
   expect(new URL(calls[1]).searchParams.get("from_name")).toBe("GVA");
   expect(new URL(calls[1]).searchParams.get("to_name")).toBe("LIS");
-  await page
-    .getByText("Autres options de réservation", { exact: true })
-    .click();
-  const searchLink = new URL(
-    (await page
-      .getByRole("link", { name: /Rechercher sur Kiwi.com/ })
-      .getAttribute("href"))!,
-  );
-  const search = new URL(
-    searchLink.searchParams.get("custom_url") || searchLink,
-  );
-  expect(search.searchParams.get("from")).toBe("GVA");
-  expect(search.searchParams.get("to")).toBe("LIS");
-  expect(search.searchParams.get("departure")).toBe(dates.departure);
-  expect(search.searchParams.get("return")).toBe(dates.returnDate);
+  expect(new URL(calls[1]).searchParams.get("departure")).toBe(dates.departure);
+  expect(new URL(calls[1]).searchParams.get("return")).toBe(dates.returnDate);
+  await expect(page.locator(".flight-widget > *")).toHaveCount(1);
+  await expect(
+    page.locator("#reservation details, #reservation summary, #reservation a"),
+  ).toHaveCount(0);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     "https://surftrips.fr/destination/ericeira",
@@ -328,7 +329,7 @@ test("script silencieux : secours après cinq secondes", async ({ page }) => {
     { timeout: 8000 },
   );
   await expect(
-    page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }),
+    page.getByRole("link", { name: /Voir les vols disponibles/ }),
   ).toBeVisible();
 });
 

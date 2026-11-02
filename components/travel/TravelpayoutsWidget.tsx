@@ -5,12 +5,10 @@ export function TravelpayoutsWidget({
   srcDoc,
   widgetKey,
   searchUrl,
-  fallbackUrl,
 }: {
   srcDoc: string | null;
   widgetKey: string;
   searchUrl: string;
-  fallbackUrl: string;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const container = useRef<HTMLDivElement>(null);
@@ -67,34 +65,6 @@ export function TravelpayoutsWidget({
       window.removeEventListener("message", receive);
     };
   }, [srcDoc, widgetKey, hydrated]);
-  const links = (
-    <div className="booking-actions">
-      <a
-        className={state === "fallback" ? "button" : "text-link"}
-        href={searchUrl}
-        target="_blank"
-        rel="sponsored noopener noreferrer"
-      >
-        Rechercher sur Kiwi.com
-        <span className="sr-only"> — nouvel onglet</span>
-      </a>
-      <a
-        className="text-link"
-        href={fallbackUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Essayer aussi sur KAYAK
-        <span className="sr-only"> — nouvel onglet</span>
-      </a>
-    </div>
-  );
-  const disclosure = (
-    <p className="booking-disclosure">
-      Réservation auprès de notre partenaire. Surftrips peut percevoir une
-      commission.
-    </p>
-  );
   return (
     <div ref={container} className="flight-widget" data-state={state}>
       {state === "loading" && (
@@ -102,13 +72,6 @@ export function TravelpayoutsWidget({
           <span>Les vols se préparent…</span>
           <span className="skeleton-line" aria-hidden="true" />
         </div>
-      )}
-      {state === "ready" && (
-        <details className="booking-options">
-          <summary>Autres options de réservation</summary>
-          {links}
-          {disclosure}
-        </details>
       )}
       {srcDoc && hydrated && (
         <iframe
@@ -125,8 +88,21 @@ export function TravelpayoutsWidget({
       {state === "fallback" && (
         <div className="booking-fallback" role="status">
           <p>Impossible d’afficher les vols ici.</p>
-          {links}
-          {disclosure}
+          <div className="booking-actions">
+            <a
+              className="button"
+              href={searchUrl}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+            >
+              Voir les vols disponibles →
+              <span className="sr-only"> — nouvel onglet</span>
+            </a>
+          </div>
+          <p className="booking-disclosure">
+            Réservation auprès de notre partenaire. Surftrips peut percevoir une
+            commission.
+          </p>
         </div>
       )}
     </div>
