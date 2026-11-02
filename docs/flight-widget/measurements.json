@@ -1,0 +1,146 @@
+[
+  {
+    "stage": "before",
+    "width": 1440,
+    "state": "fallback",
+    "sectionHeight": 675.046875,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before",
+    "width": 1280,
+    "state": "fallback",
+    "sectionHeight": 675.046875,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before",
+    "width": 768,
+    "state": "fallback",
+    "sectionHeight": 693.609375,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before",
+    "width": 390,
+    "state": "fallback",
+    "sectionHeight": 1045.296875,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after",
+    "width": 1440,
+    "state": "fallback",
+    "sectionHeight": 281.75,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after",
+    "width": 1280,
+    "state": "fallback",
+    "sectionHeight": 281.75,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after",
+    "width": 768,
+    "state": "fallback",
+    "sectionHeight": 274.859375,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after",
+    "width": 390,
+    "state": "fallback",
+    "sectionHeight": 351.140625,
+    "iframeHeight": 0,
+    "gapAfterIframe": null,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before-controlled",
+    "width": 1440,
+    "state": "ready",
+    "sectionHeight": 993.046875,
+    "iframeHeight": 300,
+    "gapAfterIframe": 267.671875,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before-controlled",
+    "width": 1280,
+    "state": "ready",
+    "sectionHeight": 993.046875,
+    "iframeHeight": 300,
+    "gapAfterIframe": 267.671875,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before-controlled",
+    "width": 768,
+    "state": "ready",
+    "sectionHeight": 1011.609375,
+    "iframeHeight": 300,
+    "gapAfterIframe": 315.25,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "before-controlled",
+    "width": 390,
+    "state": "ready",
+    "sectionHeight": 1363.296875,
+    "iframeHeight": 300,
+    "gapAfterIframe": 407.921875,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after-controlled",
+    "width": 1440,
+    "state": "ready",
+    "sectionHeight": 390.46875,
+    "iframeHeight": 200,
+    "gapAfterIframe": 32.0,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after-controlled",
+    "width": 1280,
+    "state": "ready",
+    "sectionHeight": 390.46875,
+    "iframeHeight": 200,
+    "gapAfterIframe": 32.0,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after-controlled",
+    "width": 768,
+    "state": "ready",
+    "sectionHeight": 383.578125,
+    "iframeHeight": 200,
+    "gapAfterIframe": 32.0,
+    "horizontalOverflow": false
+  },
+  {
+    "stage": "after-controlled",
+    "width": 390,
+    "state": "ready",
+    "sectionHeight": 376.375,
+    "iframeHeight": 200,
+    "gapAfterIframe": 32.0,
+    "horizontalOverflow": false
+  }
+]

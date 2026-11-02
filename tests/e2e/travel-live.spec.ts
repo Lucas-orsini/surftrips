@@ -21,6 +21,21 @@ test("Travelpayouts réel : préremplissage du widget et recherche complète Kiw
   await expect(script).toHaveAttribute("data-return", returnDate);
   await expect(script).toHaveAttribute("data-lang", "fr");
   await expect(script).toHaveAttribute("data-currency", "eur");
+  await expect(script).toHaveAttribute("data-affilid", "travelpayoutswidget");
+  const widgetUrl = new URL(
+    (await frame
+      .locator('script[src^="https://tpemd.com/content"]')
+      .getAttribute("src"))!,
+  );
+  expect(widgetUrl.searchParams.get("powered_by")).toBe("false");
+  expect(widgetUrl.searchParams.get("trs")).toBeTruthy();
+  expect(widgetUrl.searchParams.get("shmarker")).toBeTruthy();
+  expect(await script.getAttribute("data-sub1")).toContain(
+    `-${widgetUrl.searchParams.get("shmarker")!.split(".")[0]}`,
+  );
+  // The official script itself disables its referral link. Inspect its own
+  // display property, even when the outer frame is hidden by the fallback.
+  await expect(frame.locator(".tp_powered_by")).toHaveCSS("display", "none");
   await expect(frame.locator("#widget-holder")).toHaveCount(1);
   await page.locator(".flight-widget").scrollIntoViewIfNeeded();
   await expect(page.locator(".flight-widget")).toHaveAttribute(
@@ -40,6 +55,25 @@ test("Travelpayouts réel : préremplissage du widget et recherche complète Kiw
         document.documentElement.clientWidth,
     ),
   ).toBe(true);
+  const options = page.getByText("Autres options de réservation", {
+    exact: true,
+  });
+  if (await options.isVisible()) await options.click();
+  const searchUrl = new URL(
+    (await page
+      .getByRole("link", { name: /Rechercher sur Kiwi.com/ })
+      .getAttribute("href"))!,
+  );
+  expect(searchUrl.origin).toBe("https://c111.travelpayouts.com");
+  expect(searchUrl.searchParams.get("shmarker")).toBe(
+    widgetUrl.searchParams.get("shmarker"),
+  );
+  info.annotations.push({
+    type: "live-widget-state",
+    description: (await page
+      .locator(".flight-widget")
+      .getAttribute("data-state"))!,
+  });
   const [search] = await Promise.all([
     page.waitForEvent("popup"),
     page.getByRole("link", { name: /Rechercher sur Kiwi.com/ }).click(),

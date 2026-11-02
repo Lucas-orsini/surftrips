@@ -23,7 +23,7 @@ export function TravelpayoutsWidget({
   const [state, setState] = useState<"loading" | "ready" | "fallback">(
     srcDoc ? "loading" : "fallback",
   );
-  const [height, setHeight] = useState(430);
+  const [height, setHeight] = useState(120);
   useEffect(() => {
     if (!srcDoc || !hydrated) return;
     let ready = false;
@@ -45,20 +45,20 @@ export function TravelpayoutsWidget({
     function receive(event: MessageEvent) {
       if (
         event.source !== frame.current?.contentWindow ||
+        event.origin !== window.location.origin ||
         event.data?.channel !== widgetKey
       )
         return;
-      if (event.data.type === "ready") {
+      const validHeight =
+        Number.isFinite(event.data.height) && event.data.height > 0;
+      if (event.data.type === "ready" && validHeight) {
         ready = true;
         setState("ready");
         window.clearTimeout(timer);
       }
       if (event.data.type === "failed" && !ready) setState("fallback");
-      if (
-        ["ready", "resize"].includes(event.data.type) &&
-        Number.isFinite(event.data.height)
-      )
-        setHeight(Math.min(1400, Math.max(300, event.data.height + 16)));
+      if (["ready", "resize"].includes(event.data.type) && validHeight)
+        setHeight(Math.min(2400, Math.max(64, Math.ceil(event.data.height))));
     }
     window.addEventListener("message", receive);
     return () => {
@@ -67,13 +67,48 @@ export function TravelpayoutsWidget({
       window.removeEventListener("message", receive);
     };
   }, [srcDoc, widgetKey, hydrated]);
+  const links = (
+    <div className="booking-actions">
+      <a
+        className={state === "fallback" ? "button" : "text-link"}
+        href={searchUrl}
+        target="_blank"
+        rel="sponsored noopener noreferrer"
+      >
+        Rechercher sur Kiwi.com
+        <span className="sr-only"> — nouvel onglet</span>
+      </a>
+      <a
+        className="text-link"
+        href={fallbackUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Essayer aussi sur KAYAK
+        <span className="sr-only"> — nouvel onglet</span>
+      </a>
+    </div>
+  );
+  const disclosure = (
+    <p className="booking-disclosure">
+      Réservation auprès de notre partenaire. Surftrips peut percevoir une
+      commission.
+    </p>
+  );
   return (
     <div ref={container} className="flight-widget" data-state={state}>
       {state === "loading" && (
-        <p className="booking-status" role="status">
-          <span className="spinner" />
-          Les vols se préparent…
-        </p>
+        <div className="booking-status" role="status">
+          <span>Les vols se préparent…</span>
+          <span className="skeleton-line" aria-hidden="true" />
+        </div>
+      )}
+      {state === "ready" && (
+        <details className="booking-options">
+          <summary>Autres options de réservation</summary>
+          {links}
+          {disclosure}
+        </details>
       )}
       {srcDoc && hydrated && (
         <iframe
@@ -87,40 +122,13 @@ export function TravelpayoutsWidget({
           style={{ height, display: state === "fallback" ? "none" : "block" }}
         />
       )}
-      <div className="booking-fallback" aria-live="polite">
-        {state === "fallback" && (
-          <p>
-            Le module de vols ne s’affiche pas. Tu peux poursuivre ta recherche
-            avec les mêmes aéroports et dates.
-          </p>
-        )}
-        {state === "ready" && (
-          <p>
-            Le module n’affiche pas d’offre ? Lance la recherche complète avec
-            tes aéroports et tes dates.
-          </p>
-        )}
-        <div className="booking-actions">
-          <a
-            className="button"
-            href={searchUrl}
-            target="_blank"
-            rel="sponsored noopener noreferrer"
-          >
-            Rechercher sur Kiwi.com
-            <span className="sr-only"> — nouvel onglet</span>
-          </a>
-          <a
-            className="text-link"
-            href={fallbackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Essayer aussi sur KAYAK
-            <span className="sr-only"> — nouvel onglet</span>
-          </a>
+      {state === "fallback" && (
+        <div className="booking-fallback" role="status">
+          <p>Impossible d’afficher les vols ici.</p>
+          {links}
+          {disclosure}
         </div>
-      </div>
+      )}
     </div>
   );
 }

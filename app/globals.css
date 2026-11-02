@@ -2033,39 +2033,19 @@ h2 {
   scroll-margin-top: 110px;
 }
 .flight-summary {
-  margin: 28px 0;
-  max-width: 650px;
+  margin: 8px 0 16px;
 }
 .booking-route {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: clamp(16px, 3vw, 36px);
-  margin-bottom: 24px;
-}
-.booking-route > div {
-  min-width: 0;
-}
-.flight-airport-label {
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-.booking-route strong {
-  font-family: var(--font-syne), sans-serif;
-  font-size: clamp(30px, 4vw, 46px);
-  letter-spacing: -1px;
-  line-height: 1.2;
+  gap: 6px 12px;
 }
 .booking-route span {
-  display: block;
-  font-size: 13px;
-  margin-top: 5px;
   overflow-wrap: anywhere;
 }
 .booking-route > svg {
+  flex-shrink: 0;
   color: var(--ocean);
 }
 .flight-dates,
@@ -3356,16 +3336,16 @@ h2 {
   overflow-y: auto;
 }
 .booking-section {
-  margin: 70px 0;
-  padding: 36px;
+  margin: 70px 0 0;
+  padding: 24px 24px 16px;
   background: var(--sand, #f7f6f0);
   border-radius: 16px;
   scroll-margin-top: 100px;
 }
 .booking-section h2 {
   font-family: var(--font-syne), sans-serif;
-  font-size: clamp(26px, 4vw, 40px);
-  letter-spacing: -1px;
+  font-size: clamp(20px, 2.5vw, 26px);
+  letter-spacing: -0.5px;
 }
 .booking-form {
   display: grid;
@@ -3407,17 +3387,36 @@ h2 {
   background: white;
 }
 .booking-status {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 20px 0;
+  padding: 8px 0;
+  font-size: 13px;
+}
+.booking-status .skeleton-line {
+  display: block;
+  height: 12px;
+  width: min(240px, 65%);
+  margin: 8px 0;
+}
+.booking-options {
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.booking-options summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.booking-options .booking-actions {
+  margin-top: 8px;
 }
 .booking-fallback {
-  margin: 18px 0;
+  margin: 0;
   line-height: 1.7;
 }
 .booking-fallback p {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+}
+.flight-widget .booking-disclosure {
+  margin: 8px 0 0;
 }
 .booking-actions {
   display: flex;
@@ -3509,7 +3508,7 @@ h2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .booking-section {
-    padding: 24px 16px;
+    padding: 20px 16px 16px;
   }
   .spot-heading {
     gap: 10px;
@@ -3532,6 +3531,9 @@ h2 {
 .accommodation-section {
   margin: 76px 0;
   scroll-margin-top: 110px;
+}
+.booking-section + .accommodation-section {
+  margin-top: 16px;
 }
 .accommodation-heading {
   max-width: 760px;

@@ -7,13 +7,13 @@ u.search = new URLSearchParams({
   promo_id: "4484",
   currency: "eur",
   locale: "fr",
-  powered_by: "true",
+  powered_by: "false",
   trs: process.env.TRAVELPAYOUTS_MARKER,
   shmarker: process.env.TRAVELPAYOUTS_SHMARKER,
   from_name: "PAR",
   to_name: "LIS",
-  departure: "2026-10-10",
-  return: "2026-10-20",
+  departure: new Date(Date.now() + 40 * 86400000).toISOString().slice(0, 10),
+  return: new Date(Date.now() + 50 * 86400000).toISOString().slice(0, 10),
 }).toString();
 try {
   const r = await fetch(u, { signal: AbortSignal.timeout(15000) });

@@ -222,7 +222,7 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
     calls.push(route.request().url());
     await route.fulfill({
       contentType: "text/javascript",
-      body: `const holder=document.createElement('div');holder.id='widget-holder';const form=document.createElement('form');const input=document.createElement('input');input.setAttribute('aria-label','Vol partenaire');form.append(input);holder.append(form);document.body.append(holder);`,
+      body: `const holder=document.createElement('div');holder.id='widget-holder';const form=document.createElement('form');const input=document.createElement('input');input.setAttribute('aria-label','Vol partenaire');form.append(input);holder.append(form);document.currentScript.after(holder);`,
     });
   });
   await page.goto("/destination/ericeira");
@@ -246,10 +246,11 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   );
   await expect(page.locator(".booking-frame")).toHaveCount(1);
   expect(calls.length).toBe(1);
-  await page
-    .getByRole("combobox", { name: "Aéroport de départ", exact: true })
-    .selectOption("GVA");
-  await page.getByRole("button", { name: "Actualiser mon vol" }).click();
+  await expect(page.locator(".booking-form")).toHaveCount(0);
+  // A new trip remounts the isolated widget without a second Surftrips form.
+  await page.goto(
+    `/destination/ericeira?origine=GVA&niveau=intermediaire&dateDepart=${dates.departure}&dateRetour=${dates.returnDate}`,
+  );
   await expect(page.locator(".flight-widget")).toHaveAttribute(
     "data-state",
     "ready",
@@ -257,6 +258,9 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   expect(calls.length).toBe(2);
   expect(new URL(calls[1]).searchParams.get("from_name")).toBe("GVA");
   expect(new URL(calls[1]).searchParams.get("to_name")).toBe("LIS");
+  await page
+    .getByText("Autres options de réservation", { exact: true })
+    .click();
   const searchLink = new URL(
     (await page
       .getByRole("link", { name: /Rechercher sur Kiwi.com/ })
@@ -353,7 +357,7 @@ test("iframe partenaire vide : un événement load ne suffit pas", async ({
   await page.route("https://tpemd.com/**", (route) =>
     route.fulfill({
       contentType: "text/javascript",
-      body: `const holder=document.createElement('div');holder.id='widget-holder';const frame=document.createElement('iframe');frame.id='single-widget';frame.src='about:blank';frame.height='300';holder.append(frame);document.body.append(holder);`,
+      body: `const holder=document.createElement('div');holder.id='widget-holder';const frame=document.createElement('iframe');frame.id='single-widget';frame.src='about:blank';frame.height='300';holder.append(frame);document.currentScript.after(holder);`,
     }),
   );
   await page.goto(`/destination/ericeira?${params()}`);

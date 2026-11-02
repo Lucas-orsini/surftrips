@@ -27,7 +27,7 @@ test("Specific Route : paramètres exacts et dates intactes", () => {
     promo_id: "4484",
     currency: "eur",
     locale: "fr",
-    powered_by: "true",
+    powered_by: "false",
     trs: "test-marker",
     shmarker: "test-affiliate",
     from_name: "PAR",

@@ -22,7 +22,7 @@ test("widget chargé sans offre : la recherche Kiwi complète conserve le voyage
   await page.route("https://tpemd.com/**", (route) =>
     route.fulfill({
       contentType: "text/javascript",
-      body: `const holder=document.createElement('div');holder.id='widget-holder';const frame=document.createElement('iframe');frame.id='single-widget';frame.src='https://widgets.kiwi.com/single';frame.height='300';holder.append(frame);document.body.append(holder);`,
+      body: `const holder=document.createElement('div');holder.id='widget-holder';const frame=document.createElement('iframe');frame.id='single-widget';frame.src='https://widgets.kiwi.com/single';frame.height='300';holder.append(frame);document.currentScript.after(holder);`,
     }),
   );
   await page.route("https://widgets.kiwi.com/single", (route) =>
@@ -48,6 +48,9 @@ test("widget chargé sans offre : la recherche Kiwi complète conserve le voyage
   const searchLink = page.getByRole("link", {
     name: /Rechercher sur Kiwi.com/,
   });
+  await page
+    .getByText("Autres options de réservation", { exact: true })
+    .click();
   await expect(searchLink).toBeVisible();
   const href = new URL((await searchLink.getAttribute("href"))!);
   const search = new URL(href.searchParams.get("custom_url") || href);

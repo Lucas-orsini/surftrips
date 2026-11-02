@@ -45,22 +45,23 @@ export function FlightSection({
       aria-labelledby="booking-title"
     >
       <p className="eyebrow">02 — S’Y RENDRE</p>
-      <h2 id="booking-title">Ton vol vers {d.name}.</h2>
+      <h2 id="booking-title">
+        {criteria && d.airportCode ? (
+          <span className="booking-route">
+            <span>
+              {departure?.city} ({criteria.origine})
+            </span>
+            <Icon name="arrow" size={22} />
+            <span>
+              {d.airportName || d.name} ({d.airportCode})
+            </span>
+          </span>
+        ) : (
+          <>Ton vol vers {d.name}.</>
+        )}
+      </h2>
       {criteria && d.airportCode ? (
         <div className="flight-summary">
-          <div className="booking-route">
-            <div>
-              <p className="flight-airport-label">Départ</p>
-              <strong>{criteria.origine}</strong>
-              <span>{departure?.city}</span>
-            </div>
-            <Icon name="arrow" size={28} />
-            <div>
-              <p className="flight-airport-label">Arrivée</p>
-              <strong>{d.airportCode}</strong>
-              {d.airportName && <span>{d.airportName}</span>}
-            </div>
-          </div>
           <p className="flight-dates">
             <Icon name="calendar" size={18} />
             {dates}
@@ -82,11 +83,13 @@ export function FlightSection({
           {error}
         </p>
       )}
-      <BookingForm
-        key={JSON.stringify(criteria)}
-        zoneId={d.zoneId}
-        criteria={criteria}
-      />
+      {(!criteria || sameAirport || error) && (
+        <BookingForm
+          key={JSON.stringify(criteria)}
+          zoneId={d.zoneId}
+          criteria={criteria}
+        />
+      )}
       {sameAirport && (
         <p className="form-error" role="status">
           Ton aéroport de départ est aussi celui de cette destination. Choisis
@@ -94,19 +97,13 @@ export function FlightSection({
         </p>
       )}
       {booking && (
-        <>
-          <TravelpayoutsWidget
-            key={booking.key}
-            widgetKey={booking.key}
-            srcDoc={booking.srcDoc}
-            searchUrl={booking.searchUrl}
-            fallbackUrl={booking.fallbackUrl}
-          />
-          <p className="booking-disclosure">
-            Module partenaire Travelpayouts. La réservation s’effectue auprès du
-            partenaire ; Surftrips peut percevoir une commission.
-          </p>
-        </>
+        <TravelpayoutsWidget
+          key={booking.key}
+          widgetKey={booking.key}
+          srcDoc={booking.srcDoc}
+          searchUrl={booking.searchUrl}
+          fallbackUrl={booking.fallbackUrl}
+        />
       )}
       {!d.airportCode && (
         <p>L’aéroport d’arrivée reste à préciser pour cette destination.</p>

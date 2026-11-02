@@ -32,7 +32,7 @@ export function buildWidgetUrl(
     promo_id: "4484",
     currency: "eur",
     locale: "fr",
-    powered_by: "true",
+    powered_by: "false",
     trs: affiliation.marker,
     shmarker: affiliation.shmarker,
     from_name: flight.origin,
@@ -87,17 +87,28 @@ export function widgetDocument(url: string, key: string): string {
   if (new URL(url).origin !== "https://tpemd.com")
     throw new Error("INVALID_WIDGET_URL");
   const channel = JSON.stringify(key).replace(/</g, "\\u003c");
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;width:100%;font-family:system-ui;background:#fff}*{box-sizing:border-box}#booking-root{width:100%;overflow:hidden}iframe{max-width:100%}</style></head><body><div id="booking-root"></div><script>
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;font-family:system-ui;background:#fff}*{box-sizing:border-box}#booking-root{display:flow-root;width:100%}iframe{display:block;max-width:100%}</style></head><body><div id="booking-root"><script>
   (() => {
     const channel = ${channel};
+    const root = document.getElementById('booking-root');
     let ready = false;
+    let lastHeight = -1;
     const loadedFrames = new WeakSet();
     const send = (type, height) => parent.postMessage({ channel, type, height }, '*');
-    const height = () => Math.ceil(document.body.getBoundingClientRect().height);
+    // Measure the intrinsic wrapper, never the viewport/document scrollHeight:
+    // the latter cannot shrink below the current outer iframe height.
+    const report = () => {
+      const height = Math.ceil(root.getBoundingClientRect().height);
+      if (!ready || height !== lastHeight) {
+        send(ready ? 'resize' : 'ready', height);
+        lastHeight = height;
+        ready = true;
+      }
+    };
     const check = () => {
       const holder = document.getElementById('widget-holder');
       const content = holder && [...holder.querySelectorAll('iframe,form,input,button,a')].some(el => el.getBoundingClientRect().height > 8 && (!(el instanceof HTMLIFrameElement) || loadedFrames.has(el)));
-      if (content) { ready = true; send('ready', height()); }
+      if (content) report();
     };
     // The partner reports a mounted UI, including its no-offers screen, via
     // { loaded: true, iframeId }. This does not guarantee flight availability.
@@ -108,11 +119,21 @@ export function widgetDocument(url: string, key: string): string {
         if (child.contentWindow === event.source && child.id === event.data.iframeId && child.src && event.origin === new URL(child.src).origin) { loadedFrames.add(child); check(); }
       }
     });
-    new MutationObserver(check).observe(document.body, { childList:true, subtree:true });
-    new ResizeObserver(() => { if (ready) send('resize', height()); else check(); }).observe(document.body);
+    // Observe only our same-origin wrapper. Kiwi's own script sizes its iframe
+    // using its official messages; we never read or modify its internal DOM.
+    const mutations = new MutationObserver(check);
+    mutations.observe(root, { childList:true, subtree:true });
+    const resize = new ResizeObserver(() => { if (ready) report(); else check(); });
+    resize.observe(root);
     const timer = setInterval(check, 400);
-    setTimeout(() => clearInterval(timer), 30000);
+    const stopTimer = setTimeout(() => clearInterval(timer), 30000);
+    window.addEventListener('pagehide', () => {
+      clearInterval(timer);
+      clearTimeout(stopTimer);
+      mutations.disconnect();
+      resize.disconnect();
+    }, { once:true });
     window.addEventListener('error', () => { if (!ready) send('failed'); });
   })();
-  </script><script async src="${escapeHtml(url)}" onerror="parent.postMessage({channel:${escapeHtml(channel)},type:'failed'},'*')"></script></body></html>`;
+  </script><script async src="${escapeHtml(url)}" onerror="parent.postMessage({channel:${escapeHtml(channel)},type:'failed'},'*')"></script></div></body></html>`;
 }
