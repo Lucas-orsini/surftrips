@@ -239,7 +239,7 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   await expect(page).toHaveTitle(/Surf à Ericeira : spots, saison et niveau/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://surftrips.fr/destination/ericeira",
+    "https://www.surftrips.fr/destination/ericeira",
   );
   expect(calls).toEqual([]);
   await expect(page.locator(".booking-frame")).toHaveCount(0);
@@ -276,7 +276,7 @@ test("arrivée directe indexable, mini formulaire et remontage du widget", async
   ).toHaveCount(0);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://surftrips.fr/destination/ericeira",
+    "https://www.surftrips.fr/destination/ericeira",
   );
   await expect(
     page.locator('.related-zones a[href*="/destination/ericeira"]'),

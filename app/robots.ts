@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
+import { canonicalUrl } from "@/lib/seo";
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/recherche", "/go/"] },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || "https://surftrips.fr"}/sitemap.xml`,
+    // Search pages must be crawled to read their noindex. Keep the existing
+    // affiliate crawl restriction and the absence of a specific GPTBot policy.
+    rules: { userAgent: "*", allow: "/", disallow: ["/go/"] },
+    sitemap: canonicalUrl("/sitemap.xml"),
   };
 }

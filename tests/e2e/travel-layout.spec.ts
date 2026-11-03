@@ -174,12 +174,18 @@ test("bloqueur : skeleton démonté et fallback sans hauteur de widget", async (
   expect(search.searchParams.get("departure")).toBe(query.get("dateDepart"));
   expect(search.searchParams.get("return")).toBe(query.get("dateRetour"));
   expect((await widget.boundingBox())!.height).toBeLessThan(240);
-  const gap = await page.evaluate(
-    () =>
-      document.querySelector("#hebergement")!.getBoundingClientRect().top -
-      document.querySelector(".flight-widget")!.getBoundingClientRect().bottom,
-  );
-  expect(gap).toBe(32);
+  // The surf/flight HTML can arrive before the independent accommodation stream.
+  await expect(page.locator("#hebergement")).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.querySelector("#hebergement")!.getBoundingClientRect().top -
+          document.querySelector(".flight-widget")!.getBoundingClientRect()
+            .bottom,
+      ),
+    )
+    .toBe(32);
   await page.locator("#reservation").screenshot({
     path: `test-results/flight-fallback-${info.project.name}.png`,
   });

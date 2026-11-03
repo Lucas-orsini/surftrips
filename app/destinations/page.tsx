@@ -3,13 +3,13 @@ import { destinationRepository } from "@/lib/destinations";
 import { getCountries } from "@/lib/db/zones";
 import { DestinationCard } from "@/components/destination/DestinationCard";
 import { SearchBar } from "@/components/search/SearchBar";
+import { pageMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Destinations de surf",
-  description:
-    "Explore les destinations de surf, leurs spots, leurs saisons et leurs aéroports pour préparer ton prochain voyage.",
-  alternates: { canonical: "/destinations" },
-};
+export const metadata: Metadata = pageMetadata(
+  "Destinations de surf",
+  "Explore les destinations de surf, leurs spots, leurs saisons et leurs aéroports pour préparer ton prochain voyage.",
+  "/destinations",
+);
 export default async function DestinationsPage() {
   const [destinations, countries] = await Promise.all([
     destinationRepository.list(),

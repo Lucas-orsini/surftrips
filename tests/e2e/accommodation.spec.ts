@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({ page }, info) => {
+  // Keep these searches independent of the rate-limit stress test and prefetches.
+  await page.setExtraHTTPHeaders({
+    "x-real-ip": `198.51.100.${150 + info.workerIndex}`,
+  });
+});
+
 function searchParams() {
   const day = new Date();
   day.setUTCDate(10);
@@ -54,7 +61,7 @@ test("Booking : fiche directe, contenu serveur, ordre surf → vol → logement,
   expect(expedia).toEqual([]);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://surftrips.fr/destination/ericeira",
+    "https://www.surftrips.fr/destination/ericeira",
   );
 });
 
@@ -119,10 +126,8 @@ test("Booking : section responsive à 1440, 1280, 768 et 390 px", async ({
     ).toBe(true);
     await expect(page.locator("#hebergement")).toBeVisible();
     if (width === 1440 || width === 390)
-      await page
-        .locator("#hebergement")
-        .screenshot({
-          path: `test-results/booking-${info.project.name}-${width}.png`,
-        });
+      await page.locator("#hebergement").screenshot({
+        path: `test-results/booking-${info.project.name}-${width}.png`,
+      });
   }
 });

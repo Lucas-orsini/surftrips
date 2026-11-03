@@ -16,7 +16,7 @@ npm run dev
 
 Le serveur lit **uniquement la base Supabase existante**. Aucun seed, migration automatique, écriture applicative ou secours avec données fictives. La migration image a été appliquée après autorisation explicite le 12 septembre 2026 ; la migration hébergement reste préparée pour application manuelle après revue. Aucune migration n’est exécutée par le site ou le build. Sans base disponible, les pages affichent un état d’indisponibilité. Aucun accès à la base n’est requis au build ; les pages qui en dépendent sont dynamiques.
 
-`NEXT_PUBLIC_SITE_URL` est facultative et vaut par défaut `https://surftrips.fr`. Les variables `LEGAL_*` existantes restent à renseigner avant publication. Le premier build télécharge les polices Syne et DM Sans pour les servir localement.
+`NEXT_PUBLIC_SITE_URL` est facultative ; l’origine canonique est `https://www.surftrips.fr`, conformément aux redirections publiques. Une ancienne valeur sur l’apex est normalisée vers `www` ; un domaine de preview ou une URL avec chemin est refusé. Les variables `LEGAL_*` existantes restent à renseigner avant publication. Le premier build télécharge les polices Syne et DM Sans pour les servir localement.
 
 ## Parcours
 
@@ -91,12 +91,15 @@ npm run build
 npm run start
 npm run test:e2e
 npm run db:inspect
+npm run audit:seo
 npm run test:e2e -- --config tests/images/playwright.config.ts
 ```
 
 Playwright utilise Chrome local, deux profils desktop/mobile, et les données Supabase réelles. Seules les réponses tierces sont simulées pour tester de façon reproductible le succès, le blocage, l’écran sans offre et le remontage. Deux contrôles supplémentaires utilisent le vrai widget partenaire et suivent le lien affilié jusqu’aux résultats Kiwi pour vérifier le trajet et les dates après redirection. Les tests couvrent aussi les URLs, l’accessibilité axe et les largeurs 320, 390, 768, 1024 et 1440 px. `PLAYWRIGHT_BASE_URL` permet de cibler un serveur de production déjà lancé. Les tests unitaires utilisent des fixtures isolées dans `tests/`, jamais importées dans l’application.
 
 Les tables et politiques existantes sont documentées dans [docs/database.md](docs/database.md). Les crédits des visuels restent dans [ASSETS.md](ASSETS.md).
+
+L’[audit SEO technique de phase 1](docs/seo-technical-audit.md) décrit les corrections, les mesures, les actions Search Console/Bing et la vérification réexécutable de toutes les destinations. `audit:seo` attend un serveur sur `http://127.0.0.1:3002` (ou `SEO_BASE_URL`), compare Supabase au sitemap et inspecte le HTML brut sans exécuter les scripts du site. En développement/preview, ajouter `SEO_EXPECT_NOINDEX=1`. Le rapport détaillé est écrit dans `.local/seo/audit.json`.
 
 ## Validation réalisée le 10 septembre 2026
 

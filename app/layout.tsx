@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans } from "next/font/google";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import { siteOrigin, nonProduction } from "@/lib/seo";
 import "./globals.css";
 
 const syne = Syne({
@@ -16,9 +17,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://surftrips.fr",
-  ),
+  metadataBase: new URL(siteOrigin()),
+  robots: nonProduction() ? { index: false, follow: true } : undefined,
   title: {
     default: "Surftrips.fr — Le bon spot. Au bon moment.",
     template: "%s | Surftrips.fr",

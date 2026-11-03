@@ -23,29 +23,24 @@ import {
 } from "@/components/accommodation/AccommodationSection";
 import { SeasonTimeline } from "@/components/destination/SeasonTimeline";
 import { Icon } from "@/components/ui/Icon";
+import {
+  destinationMetadata,
+  destinationStructuredData,
+  serializeJsonLd,
+} from "@/lib/seo";
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<SearchParams>;
 };
 export const dynamic = "force-dynamic";
+// Keep the zone lookup and essential HTML outside a route-wide loading boundary:
+// otherwise a missing zone is streamed as HTTP 200 and the page needs JS to reveal it.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const zone = await getZone(slug);
-  if (!zone)
-    return { title: "Destination introuvable", robots: { index: false } };
-  const description = `Surf à ${zone.name}, ${zone.country} : ${zone.spots.length} spot${zone.spots.length > 1 ? "s" : ""} documenté${zone.spots.length > 1 ? "s" : ""}, niveaux et saisons.${zone.airportCode ? ` Aéroport d’arrivée : ${zone.airportCode}.` : ""}`;
-  return {
-    title: `Surf à ${zone.name} : spots, saison et niveau`,
-    description,
-    alternates: {
-      canonical: `/destination/${encodeURIComponent(zone.zoneId)}`,
-    },
-    openGraph: {
-      title: `Surf à ${zone.name}`,
-      description,
-      url: `/destination/${encodeURIComponent(zone.zoneId)}`,
-    },
-  };
+  // notFound() in the page supplies Next's noindex; avoid a duplicate robots tag.
+  if (!zone) return { title: "Destination introuvable" };
+  return destinationMetadata(zone);
 }
 export default async function DestinationPage({ params, searchParams }: Props) {
   const { slug } = await params;
@@ -76,6 +71,12 @@ export default async function DestinationPage({ params, searchParams }: Props) {
     : [];
   return (
     <main id="main-content" className="destination-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd(destinationStructuredData(zone)),
+        }}
+      />
       <div className="container">
         <Link
           className="back-link"

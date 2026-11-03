@@ -150,7 +150,7 @@ test("Storage réel : landing, résultats partageables et navigation vers une ph
   expect(new URL(page.url()).searchParams.get("dateDepart")).toBe(dateDepart);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://surftrips.fr/destination/ericeira",
+    "https://www.surftrips.fr/destination/ericeira",
   );
   await page
     .getByRole("link", { name: "Revenir aux résultats", exact: true })

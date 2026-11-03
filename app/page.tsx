@@ -11,8 +11,16 @@ import { FinalCTA } from "@/components/landing/FinalCTA";
 import { mapPoints } from "@/lib/surf/matching";
 import { getCountries } from "@/lib/db/zones";
 import { destinationRepository } from "@/lib/destinations";
+import { pageMetadata, serializeJsonLd, siteStructuredData } from "@/lib/seo";
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = {
+  ...pageMetadata(
+    "Surftrips.fr — Le bon spot. Au bon moment.",
+    "Trouve ta prochaine destination de surf selon ton niveau, tes dates et ton aéroport de départ. Compare les saisons et les spots. Gratuit, sans inscription.",
+    "/",
+  ),
+  title: { absolute: "Surftrips.fr — Le bon spot. Au bon moment." },
+};
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +32,12 @@ export default async function Home() {
     .slice(0, 3);
   return (
     <main id="main-content">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd(siteStructuredData()),
+        }}
+      />
       <Hero
         countries={countries}
         postcard={
