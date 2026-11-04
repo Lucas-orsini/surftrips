@@ -3431,10 +3431,41 @@ h2 {
   align-items: center;
   gap: 15px;
 }
-.spot-heading h4 {
+.spot-heading h3 {
   font-family: var(--font-syne), sans-serif;
   font-size: 22px;
+  margin: 0;
   flex: 1;
+}
+.detail-grid .spots-section-title {
+  font-size: 22px;
+  letter-spacing: -0.6px;
+  margin-top: 32px;
+}
+.destination-info h2 {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+  line-height: 1.4;
+  margin: 24px 0 16px;
+}
+.destination-info .destination-levels dt {
+  flex-shrink: 1;
+}
+.editorial-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.editorial-sources a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.destination-practical {
+  margin-top: 28px;
 }
 .spot-facts {
   display: flex;

@@ -9,6 +9,12 @@ test("bannière : quatre largeurs, informations visibles, CLS et fallback identi
   );
   test.setTimeout(90_000);
   await page.route("https://tpemd.com/**", (route) => route.abort());
+  // All destinations now have a photo, including Pavones.
+  await page.route("**/_next/image?**", (route) =>
+    decodeURIComponent(route.request().url()).includes("/pavones/")
+      ? route.abort()
+      : route.continue(),
+  );
   await page.addInitScript(() => {
     Object.assign(window, { bannerCLS: 0, bannerShifts: [] });
     new PerformanceObserver((list) => {

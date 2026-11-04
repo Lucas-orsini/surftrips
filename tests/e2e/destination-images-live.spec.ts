@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { destinationBannerAlt } from "../../lib/images/banner";
 import batch from "../../docs/destination-image-batch.json" with { type: "json" };
 import secondBatch from "../../docs/destination-image-batch-02.json" with { type: "json" };
 
@@ -33,7 +34,8 @@ test("Storage réel : photos publiées, refresh, ordre DOM et fallback", async (
     const img = hero.locator("img");
     await expect(img).toHaveAttribute(
       "alt",
-      `Surf à ${entry.destination}, ${entry.country}`,
+      destinationBannerAlt(entry.storage_path) ||
+        `Surf à ${entry.destination}, ${entry.country}`,
     );
     const source = new URL(
       new URL((await img.getAttribute("src"))!, page.url()).searchParams.get(
@@ -79,6 +81,12 @@ test("Storage réel : photos publiées, refresh, ordre DOM et fallback", async (
   }
   await page.reload();
   await expect(hero).toHaveAttribute("data-image-state", "ready");
+  // Pavones now has a real photo. Simulate unavailability to test the fallback.
+  await page.route("**/_next/image?**", (route) =>
+    decodeURIComponent(route.request().url()).includes("/pavones/")
+      ? route.abort()
+      : route.continue(),
+  );
   await page.goto("/destination/pavones");
   await expect(hero).toHaveAttribute("data-image-state", "fallback");
   await expect(hero.locator("img")).toHaveCount(0);

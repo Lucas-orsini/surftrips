@@ -42,3 +42,22 @@ const BANNER_POSITIONS: Readonly<Record<string, string>> = {
 export function destinationBannerPosition(path: string | null | undefined) {
   return (path && BANNER_POSITIONS[path]) || "center";
 }
+
+// Visually reviewed against the assets and docs/destination-image-batch.json.
+// A destination-level location does not establish the name of a particular spot.
+const BANNER_DESCRIPTIONS: Readonly<Record<string, string>> = {
+  "ericeira/hero.webp":
+    "Deux surfeurs avec leurs planches au bord d’une plage d’Ericeira",
+  "biarritz/hero.webp":
+    "Vagues arrivant sur une plage de Biarritz, vues depuis la côte",
+  "imsouane/hero.webp":
+    "Surfeurs répartis sur les lignes de vagues dans la baie d’Imsouane",
+  "bukit-bali/hero.webp":
+    "L’océan et les rochers vus depuis une cavité à Uluwatu, Bali",
+  "hossegor/hero.webp":
+    "Surfeur sur une vague et autres surfeurs au large d’Hossegor",
+};
+
+export function destinationBannerAlt(path: string | null | undefined) {
+  return (path && BANNER_DESCRIPTIONS[path]) || undefined;
+}

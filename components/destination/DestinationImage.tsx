@@ -12,6 +12,7 @@ interface Props {
   hero?: boolean;
   compact?: boolean;
   objectPosition?: CSSProperties["objectPosition"];
+  alt?: string;
 }
 
 export function DestinationImage(props: Props) {
@@ -27,6 +28,7 @@ function ImageContent({
   hero = false,
   compact = false,
   objectPosition = "center",
+  alt: photoAlt,
 }: Props) {
   const [state, setState] = useState<"loading" | "ready" | "fallback">(
     src ? "loading" : "fallback",
@@ -70,7 +72,7 @@ function ImageContent({
       ) : (
         <Image
           src={src}
-          alt={alt}
+          alt={photoAlt ?? alt}
           fill
           style={{ objectPosition }}
           sizes={sizes}

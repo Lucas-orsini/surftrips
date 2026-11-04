@@ -10,6 +10,13 @@ import {
   isIndexableDestination,
 } from "../lib/seo.ts";
 import { getDestinationImageUrl } from "../lib/images/destination.ts";
+import { isSurfLevel, LEVEL_LABELS } from "../lib/surf/levels.ts";
+import {
+  destinationEditorials,
+  getDestinationEditorial,
+  validateDestinationEditorial,
+  relatedCountryDestinations,
+} from "../lib/editorial/destinations.ts";
 
 nextEnv.loadEnvConfig(process.cwd());
 const baseURL = process.env.SEO_BASE_URL || "http://127.0.0.1:3002";
@@ -22,20 +29,34 @@ interface CensusRow {
   country: string;
   notes: string | null;
   image: string | null;
+  airportCode: string | null;
+  transfer: string | null;
+  centerStatus: string | null;
   spots: {
+    spotId: string;
     name: string;
     notes: string | null;
     level: string | null;
     season: string | null;
+    minimum: string | null;
+    startMonth: number | null;
+    endMonth: number | null;
+    wave: string | null;
+    bottom: string | null;
+    caution: string | null;
+    coordinateStatus: string | null;
   }[];
 }
 
 async function audit() {
   const zones =
     await readQuery<CensusRow>(`SELECT z.zone_id AS "zoneId", z.nom AS name, z.pays AS country,
-    z.notes, to_jsonb(z)->>'hero_image_path' AS image,
-    COALESCE((SELECT jsonb_agg(jsonb_build_object('name',s.nom,'notes',s.notes,
-    'level',s.niveau_ideal,'season',s.saison_ideale) ORDER BY s.spot_id)
+    z.notes, to_jsonb(z)->>'hero_image_path' AS image, z.code_aeroport AS "airportCode",
+    z.transfert AS transfer, z.centre_statut AS "centerStatus",
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('spotId',s.spot_id,'name',s.nom,'notes',s.notes,
+    'level',s.niveau_ideal,'season',s.saison_ideale,'minimum',s.niveau_min,
+    'startMonth',s.mois_debut,'endMonth',s.mois_fin,'wave',s.type_vague,'bottom',s.fond,
+    'caution',s.flag_verif,'coordinateStatus',s.coord_statut) ORDER BY s.spot_id)
     FROM public.spots s WHERE s.zone_id=z.zone_id),'[]'::jsonb) AS spots
     FROM public.zones z ORDER BY z.zone_id`);
   if (!zones.length) throw new Error("Empty source catalog");
@@ -48,6 +69,14 @@ async function audit() {
     // DOMParser only parses the HTTP response; no site script or RSC payload executes.
     const parser = await context.newPage();
     const failures: string[] = [];
+    for (const [id, entry] of Object.entries(destinationEditorials)) {
+      if (!entry) continue;
+      const zone = zones.find((z) => z.zoneId === id);
+      if (!zone) failures.push(`Orphan editorial destination: ${id}`);
+      else
+        for (const issue of validateDestinationEditorial(entry, zone))
+          failures.push(`${id}: ${issue}`);
+    }
     const sitemapResponse = await context.request.get("/sitemap.xml");
     const sitemap = await parser.evaluate(
       (xml) => {
@@ -82,6 +111,8 @@ async function audit() {
       issues: string[];
       htmlCharacters?: number;
       internalLinks?: number;
+      countryLinks?: string[];
+      semanticHtml?: boolean;
     }[] = [];
     const imageUrls = new Set<string>();
     for (const zone of zones) {
@@ -115,6 +146,37 @@ async function audit() {
               twitterImage: meta("twitter:image"),
               robots: meta("robots"),
               h1: doc.querySelector("h1")?.textContent || "",
+              h1Count: doc.querySelectorAll("h1").length,
+              headings: [
+                ...doc.querySelectorAll(
+                  "main h1,main h2,main h3,main h4,main h5,main h6",
+                ),
+              ].map((n) => ({
+                level: Number(n.tagName.slice(1)),
+                text: n.textContent?.trim() || "",
+              })),
+              spotIds: [...doc.querySelectorAll(".spot-detail")].map((n) => ({
+                id: n.getAttribute("data-spot-id"),
+                heading: n.querySelector("h3")?.textContent,
+                facts: Object.fromEntries(
+                  [...n.querySelectorAll(".spot-facts > div")].map((row) => [
+                    row.querySelector("dt")?.textContent,
+                    row.querySelector("dd")?.textContent,
+                  ]),
+                ),
+              })),
+              introduction:
+                doc.querySelector(".destination-introduction")?.textContent ||
+                "",
+              emptySections: [...doc.querySelectorAll("main section")].filter(
+                (n) => !n.textContent?.trim(),
+              ).length,
+              countryLinks: [
+                ...doc.querySelectorAll(".country-destinations a[href]"),
+              ].map((n) => ({
+                href: n.getAttribute("href")!,
+                text: n.textContent?.trim() || "",
+              })),
               body: doc.querySelector("main")?.textContent || "",
               jsonLd,
               links: [...doc.querySelectorAll("main a[href]")].map((n) =>
@@ -152,7 +214,71 @@ async function audit() {
         )
           issues.push("Essential HTML missing or hidden");
         if (zone.notes && !data.body.includes(zone.notes))
-          issues.push("Existing presentation missing in HTML");
+          if (!getDestinationEditorial(zone)?.introduction)
+            issues.push("Existing presentation missing in HTML");
+        const editorial = getDestinationEditorial(zone);
+        if (
+          editorial?.introduction &&
+          !data.introduction.includes(editorial.introduction.text)
+        )
+          issues.push("Editorial introduction missing in server HTML");
+        if (!editorial?.introduction && !zone.notes && data.introduction)
+          issues.push("Artificial presentation on an unedited destination");
+        const semanticHtml =
+          data.h1Count === 1 &&
+          data.emptySections === 0 &&
+          data.headings.every(
+            (h, i) =>
+              h.text && (!i || h.level <= data.headings[i - 1].level + 1),
+          ) &&
+          zone.spots.every((s) =>
+            data.spotIds.some((h) => h.id === s.spotId && h.heading === s.name),
+          );
+        if (!semanticHtml)
+          issues.push(
+            "Heading hierarchy, empty section or spot association invalid",
+          );
+        for (const spot of zone.spots) {
+          const facts = data.spotIds.find((s) => s.id === spot.spotId)?.facts;
+          if (
+            !facts ||
+            (isSurfLevel(spot.minimum) &&
+              facts["Niveau minimum"] !== LEVEL_LABELS[spot.minimum]) ||
+            (isSurfLevel(spot.level) &&
+              facts["Niveau idéal"] !== LEVEL_LABELS[spot.level]) ||
+            (spot.level &&
+              !isSurfLevel(spot.level) &&
+              facts["Niveau idéal"] !== "À vérifier") ||
+            (spot.season && facts.Saison !== spot.season) ||
+            (spot.wave && facts.Vague !== spot.wave) ||
+            (spot.bottom && facts.Fond !== spot.bottom)
+          )
+            issues.push(`Structured spot facts changed: ${spot.spotId}`);
+        }
+        const relatedIds = zone.airportCode
+          ? zones
+              .filter(
+                (z) =>
+                  z.zoneId !== zone.zoneId &&
+                  z.airportCode === zone.airportCode,
+              )
+              .map((z) => z.zoneId)
+          : [];
+        const expectedCountryLinks = relatedCountryDestinations(
+          zone,
+          zones,
+          relatedIds,
+        ).map((z) => destinationPath(z.zoneId));
+        if (
+          data.countryLinks.length !== expectedCountryLinks.length ||
+          data.countryLinks.some(
+            (a) =>
+              !a.text ||
+              !expectedCountryLinks.includes(a.href) ||
+              a.href.includes("?"),
+          )
+        )
+          issues.push("Editorial country links mismatch");
         if (
           zone.spots.some(
             (spot) =>
@@ -186,6 +312,8 @@ async function audit() {
           ...metadata,
           htmlCharacters: body.length,
           internalLinks: links.length,
+          countryLinks: data.countryLinks.map((a) => a.href),
+          semanticHtml,
           issues,
         });
       } catch {
@@ -198,6 +326,19 @@ async function audit() {
           description: "",
           issues: ["HTTP or HTML parsing failed"],
         });
+      }
+    }
+    for (const row of rows) {
+      for (const href of row.countryLinks || []) {
+        if (
+          !rows.some(
+            (target) =>
+              destinationPath(target.slug) === href && target.status === 200,
+          )
+        )
+          failures.push(
+            `${row.slug}: linked destination not HTTP 200: ${href}`,
+          );
       }
     }
     const duplicates = (field: "title" | "description") => {
@@ -251,6 +392,65 @@ async function audit() {
       duplicateTitles,
       duplicateDescriptions,
       phase2: {
+        databasePresentationCount: zones.filter((z) => z.notes?.trim()).length,
+        editorialPresentationCount: zones.filter(
+          (z) => getDestinationEditorial(z)?.introduction,
+        ).length,
+        addedPresentationCount: zones.filter(
+          (z) => !z.notes?.trim() && getDestinationEditorial(z)?.introduction,
+        ).length,
+        effectivePresentationCount: zones.filter(
+          (z) => z.notes?.trim() || getDestinationEditorial(z)?.introduction,
+        ).length,
+        semanticPageCount: rows.filter((r) => r.semanticHtml).length,
+        addedCountryLinkCount: rows.reduce(
+          (sum, r) => sum + (r.countryLinks?.length || 0),
+          0,
+        ),
+        noEffectivePresentation: zones
+          .filter(
+            (z) =>
+              !z.notes?.trim() && !getDestinationEditorial(z)?.introduction,
+          )
+          .map((z) => z.zoneId),
+        detailedLevelReview: zones.flatMap((z) =>
+          z.spots
+            .filter(
+              (s) =>
+                s.level &&
+                !["debutant", "intermediaire", "expert"].includes(s.level),
+            )
+            .map((s) => ({
+              spotId: s.spotId,
+              zoneId: z.zoneId,
+              destination: z.name,
+              field: "niveau_ideal",
+              value: s.level,
+              reason:
+                "Valeur hors des trois niveaux validés ; aucune correspondance métier confirmée.",
+            })),
+        ),
+        seasonsMissing: zones.flatMap((z) =>
+          z.spots
+            .filter((s) => !s.startMonth || !s.endMonth)
+            .map((s) => ({ zoneId: z.zoneId, spotId: s.spotId })),
+        ),
+        geographicReview: zones.map((z) => ({
+          zoneId: z.zoneId,
+          centerStatus: z.centerStatus,
+          spots: z.spots
+            .filter((s) => s.coordinateStatus !== "ok")
+            .map((s) => ({ spotId: s.spotId, status: s.coordinateStatus })),
+        })),
+        sourceFlags: zones.flatMap((z) =>
+          z.spots
+            .filter((s) => s.caution)
+            .map((s) => ({
+              zoneId: z.zoneId,
+              spotId: s.spotId,
+              flag: s.caution,
+            })),
+        ),
         noPresentation: zones
           .filter((z) => !z.notes?.trim())
           .map((z) => z.zoneId),

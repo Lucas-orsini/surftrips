@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getZone, getOtherZones } from "@/lib/db/zones";
+import { getZone, getOtherZones, getCatalog } from "@/lib/db/zones";
 import { withDestinationImage } from "@/lib/destinations";
 import { prepareDestination } from "@/lib/surf/matching";
 import { LEVEL_LABELS } from "@/lib/surf/levels";
@@ -23,10 +23,17 @@ import {
 } from "@/components/accommodation/AccommodationSection";
 import { SeasonTimeline } from "@/components/destination/SeasonTimeline";
 import { Icon } from "@/components/ui/Icon";
+import { EditorialParagraph } from "@/components/destination/EditorialParagraph";
+import {
+  getDestinationEditorial,
+  editorialSpotNote,
+  relatedCountryDestinations,
+} from "@/lib/editorial/destinations";
 import {
   destinationMetadata,
   destinationStructuredData,
   serializeJsonLd,
+  destinationPath,
 } from "@/lib/seo";
 type Props = {
   params: Promise<{ slug: string }>;
@@ -64,11 +71,19 @@ export default async function DestinationPage({ params, searchParams }: Props) {
     : null;
   const criteria = validation?.success ? validation.data : undefined;
   const d = withDestinationImage(prepareDestination(zone, criteria));
+  const editorial = getDestinationEditorial(zone);
   const related = zone.airportCode
     ? (await getOtherZones(zone.airportCode, zone.zoneId))
         .map((z) => withDestinationImage(prepareDestination(z, criteria)))
         .filter((z) => !criteria || z.compatibleSpots > 0)
     : [];
+  const countryLinks = relatedCountryDestinations(
+    zone,
+    (await getCatalog()).zones,
+    related.map((other) => other.zoneId),
+  );
+  const introduction =
+    editorial?.introduction || (d.notes ? { text: d.notes } : null);
   return (
     <main id="main-content" className="destination-page">
       <script
@@ -92,13 +107,23 @@ export default async function DestinationPage({ params, searchParams }: Props) {
         <div id="surf" className="detail-grid">
           <div>
             <p className="eyebrow">01 — SURFER</p>
-            <h2>Ton prochain terrain de jeu.</h2>
-            {d.notes && <p className="body-copy">{d.notes}</p>}
-            <h3>
+            {introduction && (
+              <section
+                className="destination-introduction"
+                aria-labelledby="presentation-title"
+              >
+                <h2 id="presentation-title">Surfer à {d.name}</h2>
+                <EditorialParagraph
+                  block={introduction}
+                  editorial={editorial}
+                />
+              </section>
+            )}
+            <h2 className={introduction ? "spots-section-title" : undefined}>
               {criteria
                 ? "Les spots accessibles à ton niveau"
-                : "Les spots de la zone"}
-            </h3>
+                : `Les spots de surf à ${d.name}`}
+            </h2>
             {criteria && !d.compatibleSpots && (
               <p className="caution">
                 Aucun spot documenté dans cette zone n’est accessible à ton
@@ -106,95 +131,153 @@ export default async function DestinationPage({ params, searchParams }: Props) {
               </p>
             )}
             <div className="spot-details">
-              {d.spots.map((spot, index) => (
-                <article key={spot.spotId} className="spot-detail">
-                  <div className="spot-heading">
-                    <span className="editorial-number">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <h4>{spot.name}</h4>
-                    <span className="level-tag">
-                      {spot.minimumLevel
-                        ? LEVEL_LABELS[spot.minimumLevel]
-                        : "Niveau à vérifier"}
-                    </span>
-                  </div>
-                  <dl className="spot-facts">
-                    {spot.minimumLevel && (
-                      <div>
-                        <dt>Niveau minimum</dt>
-                        <dd>{LEVEL_LABELS[spot.minimumLevel]}</dd>
-                      </div>
-                    )}
-                    {spot.idealLevel && (
-                      <div>
-                        <dt>Niveau idéal</dt>
-                        <dd>{LEVEL_LABELS[spot.idealLevel]}</dd>
-                      </div>
-                    )}
-                    {spot.idealNeedsReview && (
-                      <div>
-                        <dt>Niveau idéal</dt>
-                        <dd>À vérifier</dd>
-                      </div>
-                    )}
-                    {spot.wave && (
-                      <div>
-                        <dt>Vague</dt>
-                        <dd>{spot.wave}</dd>
-                      </div>
-                    )}
-                    {spot.bottom && (
-                      <div>
-                        <dt>Fond</dt>
-                        <dd>{spot.bottom}</dd>
-                      </div>
-                    )}
-                    {spot.season && (
-                      <div>
-                        <dt>Saison</dt>
-                        <dd>{spot.season}</dd>
-                      </div>
-                    )}
-                  </dl>
-                  {spot.notes && <p className="body-copy">{spot.notes}</p>}
-                  {spot.caution && (
-                    <p className="caution">
-                      <Icon name="compass" size={20} />
-                      <span>
-                        <strong>Point de vigilance</strong>
-                        {spot.caution}
+              {d.spots.map((spot, index) => {
+                const note = editorialSpotNote(spot, editorial);
+                return (
+                  <article
+                    key={spot.spotId}
+                    className="spot-detail"
+                    data-spot-id={spot.spotId}
+                  >
+                    <div className="spot-heading">
+                      <span className="editorial-number">
+                        {String(index + 1).padStart(2, "0")}
                       </span>
-                    </p>
-                  )}
-                </article>
-              ))}
+                      <h3>{spot.name}</h3>
+                      <span className="level-tag">
+                        {spot.minimumLevel
+                          ? LEVEL_LABELS[spot.minimumLevel]
+                          : "Niveau à vérifier"}
+                      </span>
+                    </div>
+                    <dl className="spot-facts">
+                      {spot.minimumLevel && (
+                        <div>
+                          <dt>Niveau minimum</dt>
+                          <dd>{LEVEL_LABELS[spot.minimumLevel]}</dd>
+                        </div>
+                      )}
+                      {spot.idealLevel && (
+                        <div>
+                          <dt>Niveau idéal</dt>
+                          <dd>{LEVEL_LABELS[spot.idealLevel]}</dd>
+                        </div>
+                      )}
+                      {spot.idealNeedsReview && (
+                        <div>
+                          <dt>Niveau idéal</dt>
+                          <dd>À vérifier</dd>
+                        </div>
+                      )}
+                      {spot.wave && (
+                        <div>
+                          <dt>Vague</dt>
+                          <dd>{spot.wave}</dd>
+                        </div>
+                      )}
+                      {spot.bottom && (
+                        <div>
+                          <dt>Fond</dt>
+                          <dd>{spot.bottom}</dd>
+                        </div>
+                      )}
+                      {spot.season && (
+                        <div>
+                          <dt>Saison</dt>
+                          <dd>{spot.season}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    {note && (
+                      <EditorialParagraph block={note} editorial={editorial} />
+                    )}
+                    {spot.caution && (
+                      <p className="caution">
+                        <Icon name="compass" size={20} />
+                        <span>
+                          <strong>Point de vigilance</strong>
+                          {spot.caution}
+                        </span>
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
             {!d.spots.length && !criteria && (
               <p>Les spots de cette zone ne sont pas encore renseignés.</p>
             )}
+            {!!editorial?.practical?.length && (
+              <section
+                className="destination-practical"
+                aria-labelledby="practical-title"
+              >
+                <h2 id="practical-title">Repères pratiques à {d.name}</h2>
+                {editorial.practical.map((block, index) => (
+                  <EditorialParagraph
+                    key={index}
+                    block={block}
+                    editorial={editorial}
+                  />
+                ))}
+              </section>
+            )}
           </div>
           <aside className="destination-info">
             <p className="eyebrow">DANS TON CARNET</p>
+            {!!d.spots.length && (
+              <section aria-labelledby="levels-title">
+                <h2 id="levels-title">Quel niveau de surf ?</h2>
+                <dl className="destination-levels">
+                  {d.spots.map((spot) => (
+                    <div key={spot.spotId}>
+                      <dt>{spot.name}</dt>
+                      <dd>
+                        Niveau minimum :{" "}
+                        {spot.minimumLevel
+                          ? LEVEL_LABELS[spot.minimumLevel]
+                          : "à vérifier"}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+            {d.timeline.some((month) => month.status !== null) && (
+              <section aria-labelledby="season-title">
+                <h2 id="season-title">Quand surfer à {d.name} ?</h2>
+                <SeasonTimeline timeline={d.timeline} detailed />
+                <p className="season-detail-note">
+                  Périodes idéales des spots
+                  {criteria ? " accessibles à ton niveau" : " de la zone"},
+                  détaillées dans chaque fiche spot. Ce calendrier saisonnier
+                  n’est pas une prévision : les conditions varient selon la
+                  houle et la météo.
+                </p>
+              </section>
+            )}
+            {(d.airportCode || d.transfer) && (
+              <section aria-labelledby="access-title">
+                <h2 id="access-title">Comment rejoindre {d.name} ?</h2>
+                <dl>
+                  {d.airportCode && (
+                    <div>
+                      <dt>Aéroport d’arrivée</dt>
+                      <dd>
+                        {d.airportName} · {d.airportCode}
+                      </dd>
+                    </div>
+                  )}
+                  {d.transfer && (
+                    <div>
+                      <dt>Transfert</dt>
+                      <dd>{d.transfer}</dd>
+                    </div>
+                  )}
+                </dl>
+              </section>
+            )}
             <dl>
-              <div>
-                <dt>Niveau</dt>
-                <dd>{d.levelLabel}</dd>
-              </div>
-              {d.airportCode && (
-                <div>
-                  <dt>Aéroport d’arrivée</dt>
-                  <dd>
-                    {d.airportName} · {d.airportCode}
-                  </dd>
-                </div>
-              )}
-              {d.transfer && (
-                <div>
-                  <dt>Transfert</dt>
-                  <dd>{d.transfer}</dd>
-                </div>
-              )}
               <div>
                 <dt>{criteria ? "Spots compatibles" : "Spots documentés"}</dt>
                 <dd>{d.compatibleSpots}</dd>
@@ -210,12 +293,6 @@ export default async function DestinationPage({ params, searchParams }: Props) {
                 </div>
               )}
             </dl>
-            <SeasonTimeline timeline={d.timeline} detailed />
-            <p className="season-detail-note">
-              Périodes idéales des spots
-              {criteria ? " accessibles à ton niveau" : " de la zone"}. Les
-              conditions varient selon la houle et la météo.
-            </p>
             <a href="#reservation" className="button">
               Préparer mon vol
               <Icon name="arrow" size={18} />
@@ -279,6 +356,29 @@ export default async function DestinationPage({ params, searchParams }: Props) {
                   path={other.heroImagePath}
                 />
               ))}
+          </section>
+        )}
+        {!!countryLinks.length && (
+          <section
+            className="related-zones country-destinations"
+            aria-labelledby="country-destinations-title"
+          >
+            <p className="eyebrow">POUR EXPLORER LE MÊME PAYS</p>
+            <h2 id="country-destinations-title">
+              Autres destinations surf — {d.country}
+            </h2>
+            <div>
+              {countryLinks.map((other) => (
+                <Link
+                  key={other.zoneId}
+                  href={destinationPath(other.zoneId)}
+                  className="text-link"
+                >
+                  {other.name}
+                  <Icon name="arrow" size={18} />
+                </Link>
+              ))}
+            </div>
           </section>
         )}
       </div>

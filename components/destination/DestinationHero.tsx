@@ -1,7 +1,10 @@
 import type { Destination } from "@/lib/types";
 import type { CSSProperties } from "react";
 import { SEASON_LABELS } from "@/lib/surf/season";
-import { destinationBannerPosition } from "@/lib/images/banner";
+import {
+  destinationBannerPosition,
+  destinationBannerAlt,
+} from "@/lib/images/banner";
 import { DestinationImage } from "./DestinationImage";
 
 export function DestinationHero({
@@ -43,6 +46,7 @@ export function DestinationHero({
           name={d.name}
           country={d.country}
           hero
+          alt={destinationBannerAlt(d.heroImagePath)}
           objectPosition={imagePosition}
           sizes="(max-width: 370px) calc(100vw - 32px), (max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(100vw - 72px), (max-width: 1392px) calc(100vw - 112px), 1280px"
         />

@@ -16,6 +16,11 @@ test.describe("HTML sans JavaScript", () => {
       const response = await page.goto(`/destination/${slug}`);
       expect(response?.status()).toBe(200);
       await expect(page.locator("h1")).toBeVisible();
+      await expect(page.locator("h1")).toHaveCount(1);
+      await expect(page.locator(".destination-introduction")).toBeVisible();
+      await expect(page.locator(".spot-heading h3").first()).toBeVisible();
+      await expect(page.locator("#season-title")).toBeVisible();
+      await expect(page.locator("#access-title")).toBeVisible();
       await expect(page.locator("h1")).toContainText(name);
       await expect(page.locator(".detail-heading")).toContainText(country);
       await expect(page.locator(".spot-detail").first()).toBeVisible();
