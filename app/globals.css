@@ -3467,6 +3467,253 @@ h2 {
 .destination-practical {
   margin-top: 28px;
 }
+.theme-page {
+  padding: 36px 0 100px;
+}
+.surf-article {
+  width: calc(100% - 80px);
+  max-width: 1120px;
+  margin-inline: auto;
+}
+.article-breadcrumb {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.article-breadcrumb a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.article-header {
+  max-width: 960px;
+  margin: 52px auto 48px;
+  text-align: center;
+}
+.article-header h1 {
+  margin: 20px auto 24px;
+  max-width: 20ch;
+  font-size: clamp(38px, 5.3vw, 68px);
+  line-height: 1.08;
+  letter-spacing: -2.6px;
+  text-wrap: balance;
+}
+.article-deck {
+  max-width: 690px;
+  margin-inline: auto;
+  font-size: 19px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.article-intro-cta {
+  margin-top: 22px;
+  font-size: 13px;
+  text-align: left;
+}
+.article-photo {
+  max-width: 960px;
+  margin: 0 auto 34px;
+}
+.article-photo-hero {
+  max-width: 1120px;
+}
+.article-photo-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.article-photo-hero .article-photo-frame {
+  aspect-ratio: 2 / 1;
+}
+.article-photo figcaption {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  padding-top: 12px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.article-photo-author a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.article-prose {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  font-size: 17px;
+  line-height: 1.9;
+}
+.article-prose h2 {
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.2;
+  letter-spacing: -1.1px;
+  text-wrap: balance;
+  margin-bottom: 24px;
+}
+.article-prose h3 {
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  margin-bottom: 16px;
+}
+.article-prose p + p {
+  margin-top: 20px;
+}
+.article-introduction {
+  margin-block: 56px 72px;
+}
+.article-introduction > p:first-child {
+  font-size: 19px;
+  line-height: 1.85;
+}
+.article-prose .article-method {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.article-destination {
+  margin-block: 76px;
+}
+.article-prose .article-country {
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ocean);
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.article-destination-link {
+  margin-top: 20px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.article-other-ideas {
+  margin: 80px 0;
+}
+.article-destination-compact {
+  margin-block: 36px;
+}
+.article-choice {
+  margin-block: 80px 64px;
+}
+.article-planning {
+  padding: 40px 0;
+  border-block: 1px solid var(--line);
+  margin: 56px 0 36px;
+}
+.article-planning .eyebrow {
+  margin-bottom: 16px;
+}
+.article-planning .theme-cta {
+  margin-top: 28px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+.article-planning .search-wrapper {
+  margin-top: 32px;
+}
+.article-footer .article-source {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.article-footer .theme-contextual {
+  margin-top: 36px;
+}
+.theme-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+  padding-left: 20px;
+  margin-top: 20px;
+  list-style: disc;
+  font-size: 14px;
+}
+.theme-links a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.catalog-guides {
+  margin: 40px 0;
+  padding-block: 24px;
+  border-block: 1px solid var(--line);
+}
+.catalog-guides h2 {
+  font-size: clamp(24px, 2.5vw, 32px);
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+}
+@media (max-width: 640px) {
+  .theme-page {
+    padding-block: 26px 64px;
+  }
+  .surf-article {
+    width: calc(100% - 40px);
+  }
+  .article-header {
+    margin-block: 36px 32px;
+    text-align: left;
+  }
+  .article-header h1 {
+    font-size: 38px;
+    letter-spacing: -1.6px;
+    margin-block: 16px 20px;
+  }
+  .article-deck {
+    font-size: 17px;
+    line-height: 1.8;
+  }
+  .article-photo-frame,
+  .article-photo-hero .article-photo-frame {
+    aspect-ratio: 8 / 5;
+  }
+  .article-photo figcaption {
+    display: block;
+  }
+  .article-photo-author {
+    display: block;
+    margin-top: 3px;
+  }
+  .article-prose {
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .article-prose h2 {
+    font-size: 29px;
+  }
+  .article-introduction {
+    margin-block: 36px 48px;
+  }
+  .article-introduction > p:first-child {
+    font-size: 17px;
+  }
+  .article-destination {
+    margin-block: 52px;
+  }
+  .article-destination-compact {
+    margin-block: 28px;
+  }
+  .article-photo {
+    margin-bottom: 28px;
+  }
+  .article-choice,
+  .article-other-ideas {
+    margin-block: 52px;
+  }
+  .article-planning {
+    padding-block: 32px;
+  }
+  .article-intro-cta {
+    font-size: 12px;
+    gap: 12px;
+  }
+}
 .spot-facts {
   display: flex;
   flex-wrap: wrap;

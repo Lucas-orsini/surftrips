@@ -100,6 +100,7 @@ export function destinationMetadata(zone: Zone): Metadata {
 
 export function catalogSitemap(
   zones: Pick<Zone, "zoneId" | "name" | "country">[],
+  publishedPaths: readonly string[] = [],
 ): MetadataRoute.Sitemap {
   // An empty catalog is not a successful sitemap. Do not publish a partial fallback.
   if (!zones.length) throw new Error("SEO_CATALOG_EMPTY");
@@ -109,6 +110,7 @@ export function catalogSitemap(
     ...zones
       .filter(isIndexableDestination)
       .map((z) => destinationPath(z.zoneId)),
+    ...publishedPaths,
   ];
   return [...new Set(paths)].map((path) => ({ url: canonicalUrl(path) }));
 }
@@ -153,4 +155,41 @@ export function destinationStructuredData(zone: Zone) {
 
 export function serializeJsonLd(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+export function thematicStructuredData(
+  page: { path: string; heading: string },
+  zones: readonly Pick<Zone, "zoneId" | "name">[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { name: "Accueil", path: "/" },
+          { name: "Destinations", path: "/destinations" },
+          { name: page.heading, path: page.path },
+        ].map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: canonicalUrl(item.path),
+        })),
+      },
+      {
+        "@type": "ItemList",
+        "@id": canonicalUrl(`${page.path}#destinations`),
+        name: page.heading,
+        numberOfItems: zones.length,
+        itemListOrder: "https://schema.org/ItemListUnordered",
+        itemListElement: zones.map((zone, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: zone.name,
+          url: canonicalUrl(destinationPath(zone.zoneId)),
+        })),
+      },
+    ],
+  };
 }

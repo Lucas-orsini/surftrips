@@ -4,6 +4,7 @@ import { getCountries } from "@/lib/db/zones";
 import { DestinationCard } from "@/components/destination/DestinationCard";
 import { SearchBar } from "@/components/search/SearchBar";
 import { pageMetadata } from "@/lib/seo";
+import { publishedThemes } from "@/lib/editorial/themes";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMetadata(
   "Destinations de surf",
@@ -15,6 +16,7 @@ export default async function DestinationsPage() {
     destinationRepository.list(),
     getCountries(),
   ]);
+  const guides = publishedThemes(destinations);
   return (
     <main id="main-content" className="container inner-page">
       <header className="page-heading">
@@ -27,6 +29,24 @@ export default async function DestinationsPage() {
         <p>Tes dates et ton niveau pour choisir.</p>
       </header>
       <SearchBar countries={countries} />
+      {!!guides.length && (
+        <section
+          id="guides"
+          className="catalog-guides"
+          aria-labelledby="catalog-guides-title"
+        >
+          <h2 id="catalog-guides-title">
+            Des guides pour choisir ton surf trip
+          </h2>
+          <ul className="theme-links">
+            {guides.map((guide) => (
+              <li key={guide.id}>
+                <a href={guide.path}>{guide.linkLabel}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <div className="listing-context">
         <span>{destinations.length} DESTINATIONS À EXPLORER</span>
         <p>Des spots documentés, des saisons à découvrir</p>

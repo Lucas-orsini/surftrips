@@ -11,6 +11,13 @@ import {
 } from "../lib/seo.ts";
 import { getDestinationImageUrl } from "../lib/images/destination.ts";
 import { isSurfLevel, LEVEL_LABELS } from "../lib/surf/levels.ts";
+import { adaptZone } from "../lib/db/rows.ts";
+import {
+  publishedThemes,
+  themesForDestination,
+} from "../lib/editorial/themes.ts";
+import { hasUnambiguousBeginnerLevel } from "../lib/surf/thematic.ts";
+import { auditThematicPages } from "./seo-theme-audit.ts";
 import {
   destinationEditorials,
   getDestinationEditorial,
@@ -30,6 +37,10 @@ interface CensusRow {
   notes: string | null;
   image: string | null;
   airportCode: string | null;
+  airportName: string | null;
+  airportAlternative: string | null;
+  latitude: string | null;
+  longitude: string | null;
   transfer: string | null;
   centerStatus: string | null;
   spots: {
@@ -52,7 +63,8 @@ async function audit() {
   const zones =
     await readQuery<CensusRow>(`SELECT z.zone_id AS "zoneId", z.nom AS name, z.pays AS country,
     z.notes, to_jsonb(z)->>'hero_image_path' AS image, z.code_aeroport AS "airportCode",
-    z.transfert AS transfer, z.centre_statut AS "centerStatus",
+    z.transfert AS transfer, z.centre_statut AS "centerStatus", z.aeroport AS "airportName",
+    z.code_aeroport_alt AS "airportAlternative",z.lat_centre AS latitude,z.lon_centre AS longitude,
     COALESCE((SELECT jsonb_agg(jsonb_build_object('spotId',s.spot_id,'name',s.nom,'notes',s.notes,
     'level',s.niveau_ideal,'season',s.saison_ideale,'minimum',s.niveau_min,
     'startMonth',s.mois_debut,'endMonth',s.mois_fin,'wave',s.type_vague,'bottom',s.fond,
@@ -60,6 +72,40 @@ async function audit() {
     FROM public.spots s WHERE s.zone_id=z.zone_id),'[]'::jsonb) AS spots
     FROM public.zones z ORDER BY z.zone_id`);
   if (!zones.length) throw new Error("Empty source catalog");
+  // Reuse the application adapter; keep raw historical values in the census above.
+  const catalog = zones.map((z) =>
+    adaptZone(
+      {
+        zone_id: z.zoneId,
+        nom: z.name,
+        pays: z.country,
+        notes: z.notes,
+        hero_image_path: z.image,
+        code_aeroport: z.airportCode,
+        code_aeroport_alt: z.airportAlternative,
+        aeroport: z.airportName,
+        transfert: z.transfer,
+        lat_centre: z.latitude,
+        lon_centre: z.longitude,
+        spots: z.spots.map((s) => ({
+          spot_id: s.spotId,
+          nom: s.name,
+          zone_id: z.zoneId,
+          niveau_min: s.minimum,
+          niveau_ideal: s.level,
+          mois_debut: s.startMonth,
+          mois_fin: s.endMonth,
+          saison_ideale: s.season,
+          type_vague: s.wave,
+          fond: s.bottom,
+          notes: s.notes,
+          flag_verif: s.caution,
+        })),
+      },
+      [],
+    ),
+  );
+  const themes = publishedThemes(catalog);
   const browser = await chromium.launch({ channel: "chrome" });
   try {
     const context = await browser.newContext({
@@ -97,6 +143,7 @@ async function audit() {
       "/",
       "/destinations",
       ...eligible.map((z) => destinationPath(z.zoneId)),
+      ...themes.map((theme) => theme.path),
     ].map(canonicalUrl);
     const missing = expectedUrls.filter((url) => !sitemap.urls.includes(url));
     const extra = sitemap.urls.filter((url) => !expectedUrls.includes(url));
@@ -112,6 +159,7 @@ async function audit() {
       htmlCharacters?: number;
       internalLinks?: number;
       countryLinks?: string[];
+      guideLinks?: string[];
       semanticHtml?: boolean;
     }[] = [];
     const imageUrls = new Set<string>();
@@ -177,6 +225,9 @@ async function audit() {
                 href: n.getAttribute("href")!,
                 text: n.textContent?.trim() || "",
               })),
+              guideLinks: [
+                ...doc.querySelectorAll(".destination-guides a[href]"),
+              ].map((n) => n.getAttribute("href")!),
               body: doc.querySelector("main")?.textContent || "",
               jsonLd,
               links: [...doc.querySelectorAll("main a[href]")].map((n) =>
@@ -289,6 +340,12 @@ async function audit() {
           issues.push("Spots/seasons missing in HTML");
         if (!data.links.includes("/destinations"))
           issues.push("Catalog link missing");
+        const sourceZone = catalog.find((z) => z.zoneId === zone.zoneId)!;
+        const expectedGuides = themesForDestination(sourceZone, catalog).map(
+          (t) => t.path,
+        );
+        if (JSON.stringify(data.guideLinks) !== JSON.stringify(expectedGuides))
+          issues.push("Destination/theme backlinks mismatch");
         if (
           data.jsonLd.length !== 1 ||
           data.jsonLd[0]["@type"] !== "BreadcrumbList" ||
@@ -353,6 +410,28 @@ async function audit() {
     const duplicateDescriptions = duplicates("description");
     if (duplicateTitles.length || duplicateDescriptions.length)
       failures.push("Duplicate metadata");
+    const phase3 = await auditThematicPages({
+      catalog,
+      request: context.request,
+      parser,
+      expectNoindex,
+      destinationRows: rows,
+    });
+    failures.push(...phase3.failures);
+    if (themes.length) imageUrls.add(canonicalUrl("/opengraph-image"));
+    const allTitles = [
+      ...rows.map((r) => r.title),
+      ...phase3.rows.map((r) => r.title).filter(Boolean),
+    ];
+    const allDescriptions = [
+      ...rows.map((r) => r.description),
+      ...phase3.rows.map((r) => r.description).filter(Boolean),
+    ];
+    if (
+      new Set(allTitles).size !== allTitles.length ||
+      new Set(allDescriptions).size !== allDescriptions.length
+    )
+      failures.push("Duplicate metadata across destinations and themes");
     const images = [];
     for (const url of imageUrls) {
       try {
@@ -472,6 +551,22 @@ async function audit() {
           .map((z) => z.zoneId),
       },
       images,
+      phase3: {
+        ...phase3,
+        beginnerCandidates: catalog
+          .flatMap((z) => z.spots)
+          .filter((s) => s.minimumLevel === "debutant").length,
+        unambiguousBeginnerLevels: catalog
+          .flatMap((z) => z.spots)
+          .filter(hasUnambiguousBeginnerLevel).length,
+        destinationBacklinkCount: rows.reduce(
+          (n, r) => n + (r.guideLinks?.length || 0),
+          0,
+        ),
+        destinationBacklinks: rows
+          .filter((r) => r.guideLinks?.length)
+          .map((r) => ({ zoneId: r.slug, paths: r.guideLinks })),
+      },
       failures,
       rows,
     };

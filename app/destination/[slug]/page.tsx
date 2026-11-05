@@ -24,6 +24,7 @@ import {
 import { SeasonTimeline } from "@/components/destination/SeasonTimeline";
 import { Icon } from "@/components/ui/Icon";
 import { EditorialParagraph } from "@/components/destination/EditorialParagraph";
+import { themesForDestination } from "@/lib/editorial/themes";
 import {
   getDestinationEditorial,
   editorialSpotNote,
@@ -77,11 +78,13 @@ export default async function DestinationPage({ params, searchParams }: Props) {
         .map((z) => withDestinationImage(prepareDestination(z, criteria)))
         .filter((z) => !criteria || z.compatibleSpots > 0)
     : [];
+  const catalog = (await getCatalog()).zones;
   const countryLinks = relatedCountryDestinations(
     zone,
-    (await getCatalog()).zones,
+    catalog,
     related.map((other) => other.zoneId),
   );
+  const guides = themesForDestination(zone, catalog);
   const introduction =
     editorial?.introduction || (d.notes ? { text: d.notes } : null);
   return (
@@ -375,6 +378,28 @@ export default async function DestinationPage({ params, searchParams }: Props) {
                   className="text-link"
                 >
                   {other.name}
+                  <Icon name="arrow" size={18} />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+        {!!guides.length && (
+          <section
+            className="related-zones destination-guides"
+            aria-labelledby="destination-guides-title"
+          >
+            <p className="eyebrow">POUR PRÉPARER TON CHOIX</p>
+            <h2 id="destination-guides-title">Guides liés à {d.name}</h2>
+            <div>
+              {guides.map((guide) => (
+                <Link
+                  className="text-link"
+                  href={guide.path}
+                  key={guide.id}
+                  prefetch={false}
+                >
+                  {guide.linkLabel}
                   <Icon name="arrow" size={18} />
                 </Link>
               ))}
