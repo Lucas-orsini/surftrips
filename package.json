@@ -15,6 +15,7 @@
     "audit:seo": "node --conditions=react-server --experimental-strip-types scripts/audit-seo.ts"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.23.24",
     "next": "^16.3.4",
     "pg": "^8.23.0",

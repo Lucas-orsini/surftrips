@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans } from "next/font/google";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import { WebAnalytics } from "@/components/analytics/WebAnalytics";
 import { siteOrigin, nonProduction } from "@/lib/seo";
 import "./globals.css";
 
@@ -65,6 +66,7 @@ export default function RootLayout({
         <Navbar />
         {children}
         <Footer />
+        <WebAnalytics />
       </body>
     </html>
   );
