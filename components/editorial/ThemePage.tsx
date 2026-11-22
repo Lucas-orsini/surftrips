@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Zone } from "@/lib/types";
 import type { Theme } from "@/lib/editorial/themes";
 import { contextualThemes } from "@/lib/editorial/themes";
+import { SURF_FORECAST } from "@/lib/editorial/surf-forecast";
 import {
   articleHighlights,
   articlePeriod,
@@ -176,6 +177,17 @@ export function ThemePage({
             </>
           )}
         </section>
+        <p className="article-prose">
+          {theme.kind === "month"
+            ? "Une fois la période choisie, reste à lire les conditions du spot : "
+            : theme.kind === "comparison"
+              ? "Pour compléter ce choix à l’approche de la session : "
+              : "Pour préparer tes sessions après le choix de la destination : "}
+          <Link href={SURF_FORECAST.path} className="text-link">
+            comprendre un surf forecast, de la houle à la marée
+          </Link>
+          .
+        </p>
         <section
           className="article-planning"
           aria-labelledby="personalize-title"

@@ -18,6 +18,8 @@ import {
 } from "../lib/editorial/themes.ts";
 import { hasUnambiguousBeginnerLevel } from "../lib/surf/thematic.ts";
 import { auditThematicPages } from "./seo-theme-audit.ts";
+import { auditForecastPage } from "./seo-forecast-audit.ts";
+import { SURF_FORECAST } from "../lib/editorial/surf-forecast.ts";
 import {
   destinationEditorials,
   getDestinationEditorial,
@@ -144,6 +146,7 @@ async function audit() {
       "/destinations",
       ...eligible.map((z) => destinationPath(z.zoneId)),
       ...themes.map((theme) => theme.path),
+      SURF_FORECAST.path,
     ].map(canonicalUrl);
     const missing = expectedUrls.filter((url) => !sitemap.urls.includes(url));
     const extra = sitemap.urls.filter((url) => !expectedUrls.includes(url));
@@ -418,14 +421,24 @@ async function audit() {
       destinationRows: rows,
     });
     failures.push(...phase3.failures);
+    const surfForecast = await auditForecastPage({
+      request: context.request,
+      parser,
+      expectNoindex,
+      knownPaths: expectedUrls.map((url) => new URL(url).pathname),
+      backlinkPaths: themes.map((theme) => theme.path),
+    });
+    failures.push(...surfForecast.failures);
     if (themes.length) imageUrls.add(canonicalUrl("/opengraph-image"));
     const allTitles = [
       ...rows.map((r) => r.title),
       ...phase3.rows.map((r) => r.title).filter(Boolean),
+      surfForecast.title,
     ];
     const allDescriptions = [
       ...rows.map((r) => r.description),
       ...phase3.rows.map((r) => r.description).filter(Boolean),
+      surfForecast.description,
     ];
     if (
       new Set(allTitles).size !== allTitles.length ||
@@ -567,6 +580,7 @@ async function audit() {
           .filter((r) => r.guideLinks?.length)
           .map((r) => ({ zoneId: r.slug, paths: r.guideLinks })),
       },
+      surfForecast,
       failures,
       rows,
     };

@@ -2,6 +2,7 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 import type { Zone } from "../lib/types.ts";
 import { publishedThemes, contextualThemes } from "../lib/editorial/themes.ts";
+import { SURF_FORECAST } from "../lib/editorial/surf-forecast.ts";
 import {
   canonicalUrl,
   destinationPath,
@@ -34,6 +35,7 @@ export async function auditThematicPages({
   const knownPaths = new Set([
     "/",
     "/destinations",
+    SURF_FORECAST.path,
     ...themes.map((t) => t.path),
     ...destinationRows
       .filter((r) => r.status === 200)

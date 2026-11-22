@@ -113,6 +113,7 @@ test("Analytics : pages publiques directement suivies, URL nettoyées sans touch
     "/ou-surfer-en/decembre",
     "/surf/portugal",
     "/comparer/ericeira-vs-peniche",
+    "/surf-forecast",
     "/confidentialite",
   ]) {
     await page.goto(`${path}?email=test%40example.com&token=private#secret`);
